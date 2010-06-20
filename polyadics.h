@@ -20,16 +20,16 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _polyadic_h_DEFINED
-#define _polyadic_h_DEFINED
+#ifndef _polyad_h_DEFINED
+#define _polyad_h_DEFINED
 
 #include <stdbool.h>
 #include <sys/types.h>
 #include "varint.h"
 
-typedef unsigned int polyadic_len_t;
+typedef unsigned int polyad_len_t;
 
-typedef struct polyadic_info_st
+typedef struct polyad_info_st
 {
     // length of data pointed to by void* data
     size_t size;
@@ -37,62 +37,62 @@ typedef struct polyadic_info_st
     void* data;
     // do we own the memory, or is it shared?
     bool shared;
-} polyadic_info_t;
+} polyad_info_t;
 
-typedef struct polyadic_st
+typedef struct polyad_st
 {
-    // total polyadic length and data pointer
-    polyadic_info_t self;
+    // total polyad length and data pointer
+    polyad_info_t self;
     // number and array of stored items
-    polyadic_len_t nitem;
-    polyadic_info_t *item;
-} polyadic_t;
+    polyad_len_t nitem;
+    polyad_info_t *item;
+} polyad_t;
 
 
 /** The following three functions should be used in consecutive order only **/
 
-/* initialize a new polyadic object prepared to store n entries */
-polyadic_t* polyadic_prepare(polyadic_len_t nitem);
-/* set the ith item in a polyadic to the given data */
-int polyadic_set(polyadic_t *polyadic, polyadic_len_t i, size_t size, void *data, bool shared);
+/* initialize a new polyad object prepared to store n entries */
+polyad_t* polyad_prepare(polyad_len_t nitem);
+/* set the ith item in a polyad to the given data */
+int polyad_set(polyad_t *polyad, polyad_len_t i, size_t size, void *data, bool shared);
 /* allocate a single memory buffer and store the packed items */
-int polyadic_finish(polyadic_t *polyadic);
+int polyad_finish(polyad_t *polyad);
 
-/* read a polyadic structure from a suppplied data pointer */
-polyadic_t* polyadic_load(size_t size, void *data, bool shared);
+/* read a polyad structure from a suppplied data pointer */
+polyad_t* polyad_load(size_t size, void *data, bool shared);
 
-/* free any non-shared memory associated with a polyadic */
-void polyadic_free(polyadic_t *polyadic);
-
-
+/* free any non-shared memory associated with a polyad */
+void polyad_free(polyad_t *polyad);
 
 
-typedef struct peanos_st
+
+
+typedef struct polyid_st
 {
     // an n-tuple of varints, transcoded to unsigned 64-bit integers
-    polyadic_len_t n;
+    polyad_len_t n;
     uint64_t *values;
     // the length and location of the backing data buffer, which may be shared
     size_t size;
     void *data;
     bool shared;
-} peanos_t;
+} polyid_t;
 
-peanos_t* peanos_new(polyadic_len_t n, uint64_t *values);
-peanos_t* peanos_load(void *data, bool shared, size_t maxlen);
-void peanos_free(peanos_t *pack);
+polyid_t* polyid_new(polyad_len_t n, uint64_t *values);
+polyid_t* polyid_load(void *data, bool shared, size_t maxlen);
+void polyid_free(polyid_t *pack);
 
 /** The following three functions should be used in consecutive order only **/
-peanos_t* peanos_prepare(polyadic_len_t n);
-int peanos_set(peanos_t *pack, polyadic_len_t i, uint64_t value);
-int peanos_finish(peanos_t *pack);
+polyid_t* polyid_prepare(polyad_len_t n);
+int polyid_set(polyid_t *pack, polyad_len_t i, uint64_t value);
+int polyid_finish(polyid_t *pack);
 /** The previous three functions should be used in consecutive order only **/
 
 
 typedef struct bytepack_st
 {
-    // begins with an peanos header
-    peanos_t *header;
+    // begins with an polyid header
+    polyid_t *header;
     // includes several binary data chunks
     void *bv;
     // which may or may not be shared memory regions
@@ -103,8 +103,8 @@ bytepack_t* bytepack_load(void *data, bool shared, size_t maxlen);
 void bytepack_free(bytepack_t *pack);
 
 /** The following three functions should be used in consecutive order only **/
-bytepack_t* bytepack_prepare(polyadic_len_t n);
-int bytepack_set(bytepack_t *pack, polyadic_len_t i, void *data, size_t len,
+bytepack_t* bytepack_prepare(polyad_len_t n);
+int bytepack_set(bytepack_t *pack, polyad_len_t i, void *data, size_t len,
         bool shared);
 int bytepack_finish(bytepack_t *pack);
 /** The previous three functions should be used in consecutive order only **/

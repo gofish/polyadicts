@@ -26,46 +26,46 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "polyadic.h"
+#include "polyadics.h"
 #include "varint.h"
 
-polyadic_t* polyadic_prepare(polyadic_len_t nitem)
+polyad_t* polyad_prepare(polyad_len_t nitem)
 {
-    polyadic_t *polyadic;
+    polyad_t *polyad;
 
-    polyadic = malloc(sizeof(polyadic_t));
-    if (polyadic) {
-        polyadic->self.size = 0;
-        polyadic->self.data = NULL;
-        polyadic->self.shared = true;
-        polyadic->item = malloc(nitem * sizeof(polyadic_info_t));
-        if (polyadic->item) {
-            polyadic_len_t i;
+    polyad = malloc(sizeof(polyad_t));
+    if (polyad) {
+        polyad->self.size = 0;
+        polyad->self.data = NULL;
+        polyad->self.shared = true;
+        polyad->item = malloc(nitem * sizeof(polyad_info_t));
+        if (polyad->item) {
+            polyad_len_t i;
             for (i = 0; i < nitem; i++) {
-                polyadic->item[i].size = 0;
-                polyadic->item[i].data = NULL;
-                polyadic->item[i].shared = true;
+                polyad->item[i].size = 0;
+                polyad->item[i].data = NULL;
+                polyad->item[i].shared = true;
             }
-            polyadic->nitem = nitem;
+            polyad->nitem = nitem;
         }else {
-            free(polyadic);
-            polyadic = NULL;
+            free(polyad);
+            polyad = NULL;
         }
     }
-    return polyadic;
+    return polyad;
 }
 
-int polyadic_set(polyadic_t *polyadic, polyadic_len_t i, size_t size, void *data, bool shared)
+int polyad_set(polyad_t *polyad, polyad_len_t i, size_t size, void *data, bool shared)
 {
-    assert(polyadic);
+    assert(polyad);
 
     int retval;
-    if (i < polyadic->nitem) {
-        if (polyadic->item[i].data && !polyadic->item[i].shared)
-            free(polyadic->item[i].data);
-        polyadic->item[i].size = size;
-        polyadic->item[i].data = data;
-        polyadic->item[i].shared = shared;
+    if (i < polyad->nitem) {
+        if (polyad->item[i].data && !polyad->item[i].shared)
+            free(polyad->item[i].data);
+        polyad->item[i].size = size;
+        polyad->item[i].data = data;
+        polyad->item[i].shared = shared;
         retval = 0;
     } else {
         errno = EINVAL;
@@ -74,46 +74,46 @@ int polyadic_set(polyadic_t *polyadic, polyadic_len_t i, size_t size, void *data
     return retval;
 }
 
-int polyadic_finish(polyadic_t *polyadic)
+int polyad_finish(polyad_t *polyad)
 {
-    assert(polyadic);
+    assert(polyad);
 
     int retval;
-    polyadic_len_t i;
+    polyad_len_t i;
     size_t head_size, tmp;
     /* count header size and total required buffer size */
     head_size = 0;
-    polyadic->self.size = 0;
-    for (i = 0; i < polyadic->nitem; i++) {
+    polyad->self.size = 0;
+    for (i = 0; i < polyad->nitem; i++) {
         /* size of item */
-        polyadic->self.size += polyadic->item[i].size;
+        polyad->self.size += polyad->item[i].size;
         /* size of varint to required to represent item size */
-        tmp = uint64_len(polyadic->item[i].size);
+        tmp = uint64_len(polyad->item[i].size);
         head_size += tmp;
-        polyadic->self.size += tmp;
+        polyad->self.size += tmp;
     }
 
-    polyadic->self.data = malloc(polyadic->self.size);
-    if (polyadic->self.data) {
+    polyad->self.data = malloc(polyad->self.size);
+    if (polyad->self.data) {
         void *head, *tail;
-        head = polyadic->self.data;
-        tail = polyadic->self.data + head_size;
-        polyadic->self.shared = false;
+        head = polyad->self.data;
+        tail = polyad->self.data + head_size;
+        polyad->self.shared = false;
 
-        for (i = 0; i < polyadic->nitem; i++) {
-            head += uint64_to_vi(polyadic->item[i].size, head);
+        for (i = 0; i < polyad->nitem; i++) {
+            head += uint64_to_vi(polyad->item[i].size, head);
             /* copy item data to shared buffer */
-            memcpy(tail, polyadic->item[i].data, polyadic->item[i].size);
+            memcpy(tail, polyad->item[i].data, polyad->item[i].size);
             /* free old data */
-            if (!polyadic->item[i].shared)
-                free(polyadic->item[i].data);
+            if (!polyad->item[i].shared)
+                free(polyad->item[i].data);
             /* point item data to location in shared buffer */
-            polyadic->item[i].data = tail;
-            polyadic->item[i].shared = true;
-            tail += polyadic->item[i].size;
+            polyad->item[i].data = tail;
+            polyad->item[i].shared = true;
+            tail += polyad->item[i].size;
         }
-        assert(head == polyadic->self.data + head_size);
-        assert(tail == polyadic->self.data + polyadic->self.size);
+        assert(head == polyad->self.data + head_size);
+        assert(tail == polyad->self.data + polyad->self.size);
         retval = 0;
     } else {
         retval = -1;
@@ -122,21 +122,21 @@ int polyadic_finish(polyadic_t *polyadic)
     return retval;
 }
 
-polyadic_t* polyadic_load(size_t size, void *data, bool shared)
+polyad_t* polyad_load(size_t size, void *data, bool shared)
 {
-    polyadic_t *polyadic;
+    polyad_t *polyad;
 
-    polyadic = malloc(sizeof(polyadic_t));
-    if (polyadic) {
+    polyad = malloc(sizeof(polyad_t));
+    if (polyad) {
         vi_size_t vi_size;
         void *head, *tail;
         uint64_t item_size;
 
-        polyadic->self.size = size;
-        polyadic->self.data = data;
-        polyadic->self.shared = shared;
-        polyadic->nitem = 0;
-        polyadic->item = NULL;
+        polyad->self.size = size;
+        polyad->self.data = data;
+        polyad->self.shared = shared;
+        polyad->nitem = 0;
+        polyad->item = NULL;
 
         /* scan header to count items */
         head = data;
@@ -147,66 +147,66 @@ polyadic_t* polyadic_load(size_t size, void *data, bool shared)
                 break;
             head += vi_size;
             tail -= item_size;
-            polyadic->nitem++;
+            polyad->nitem++;
         }
 
         if (head == tail) {
             /* allocate item array and scan header again for item offsets */
-            polyadic->item = malloc(polyadic->nitem * sizeof(polyadic_info_t));
-            if (polyadic->item) {
-                polyadic_len_t i;
+            polyad->item = malloc(polyad->nitem * sizeof(polyad_info_t));
+            if (polyad->item) {
+                polyad_len_t i;
                 head = data;
-                for (i = 0; i < polyadic->nitem; i++) {
+                for (i = 0; i < polyad->nitem; i++) {
                     vi_size = vi_to_uint64(head, &item_size);
                     assert(vi_size);
-                    polyadic->item[i].size = item_size;
-                    polyadic->item[i].data = tail;
-                    polyadic->item[i].shared = true;
+                    polyad->item[i].size = item_size;
+                    polyad->item[i].data = tail;
+                    polyad->item[i].shared = true;
                     head += vi_size;
                     tail += item_size;
                 }
             } else {
-                free(polyadic);
-                polyadic = NULL;
+                free(polyad);
+                polyad = NULL;
             }
         }else {
-            free(polyadic);
-            polyadic = NULL;
+            free(polyad);
+            polyad = NULL;
             errno = EINVAL;
         }
     }
-    return polyadic;
+    return polyad;
 }
 
-void polyadic_free(polyadic_t *polyadic)
+void polyad_free(polyad_t *polyad)
 {
-    assert(polyadic);
+    assert(polyad);
 
-    polyadic_len_t i;
-    for (i = 0; i < polyadic->nitem; i++) {
-        if (!polyadic->item[i].shared)
-            free(polyadic->item[i].data);
+    polyad_len_t i;
+    for (i = 0; i < polyad->nitem; i++) {
+        if (!polyad->item[i].shared)
+            free(polyad->item[i].data);
     }
-    if (!polyadic->self.shared)
-        free(polyadic->self.data);
-    free(polyadic->item);
-    free(polyadic);
+    if (!polyad->self.shared)
+        free(polyad->self.data);
+    free(polyad->item);
+    free(polyad);
 }
 
 #if 0
 
-peanos_t* peanos_prepare(polyadic_len_t nitem)
+polyid_t* polyid_prepare(polyad_len_t nitem)
 {
-    peanos_t *pack;
+    polyid_t *pack;
 
-    pack = malloc(sizeof(peanos_t));
+    pack = malloc(sizeof(polyid_t));
     if (pack) {
         pack->self.size = 0;
         pack->self.data = NULL;
         pack->self.shared = true;
         pack->item = malloc(nitem * sizeof(pack_info_t));
         if (pack->item) {
-            polyadic_len_t i;
+            polyad_len_t i;
             for (i = 0; i < nitem; i++) {
                 pack->item[i].size = 0;
                 pack->item[i].data = NULL;
@@ -221,7 +221,7 @@ peanos_t* peanos_prepare(polyadic_len_t nitem)
     return pack;
 }
 
-int peanos_set(peanos_t *pack, polyadic_len_t i, size_t size, void *data, bool shared)
+int polyid_set(polyid_t *pack, polyad_len_t i, size_t size, void *data, bool shared)
 {
     assert(pack);
 
@@ -240,12 +240,12 @@ int peanos_set(peanos_t *pack, polyadic_len_t i, size_t size, void *data, bool s
     return retval;
 }
 
-int peanos_finish(peanos_t *pack)
+int polyid_finish(polyid_t *pack)
 {
     assert(pack);
 
     int retval;
-    polyadic_len_t i;
+    polyad_len_t i;
     size_t head_size, tmp;
     /* count header size and total required buffer size */
     head_size = 0;
@@ -290,13 +290,13 @@ int peanos_finish(peanos_t *pack)
 
 #endif
 
-peanos_t* peanos_new(polyadic_len_t n, uint64_t *values)
+polyid_t* polyid_new(polyad_len_t n, uint64_t *values)
 {
-    peanos_t *pack;
+    polyid_t *pack;
 
-    pack = malloc(sizeof(peanos_t));
+    pack = malloc(sizeof(polyid_t));
     if (pack) {
-        polyadic_len_t i;
+        polyad_len_t i;
 
         pack->n = n;
         pack->shared = false;
@@ -331,14 +331,14 @@ peanos_t* peanos_new(polyadic_len_t n, uint64_t *values)
     return NULL;
 }
 
-peanos_t* peanos_load(void *data, bool shared, size_t maxlen)
+polyid_t* polyid_load(void *data, bool shared, size_t maxlen)
 {
-    peanos_t *pack;
+    polyid_t *pack;
 
-    pack = malloc(sizeof(peanos_t));
+    pack = malloc(sizeof(polyid_t));
     if (pack) {
         vi_size_t vi_size;
-        polyadic_len_t i;
+        polyad_len_t i;
         uint64_t n;
 
         pack->size = 0;
@@ -386,7 +386,7 @@ peanos_t* peanos_load(void *data, bool shared, size_t maxlen)
     return pack;
 }
 
-void peanos_free(peanos_t *pack)
+void polyid_free(polyid_t *pack)
 {
     assert(pack);
 

@@ -20,11 +20,11 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __ptmodule_h_DEFINED
-#define __ptmodule_h_DEFINED
+#ifndef _polyadictsmodule_h_DEFINED
+#define _polyadictsmodule_h_DEFINED
 
 #include <Python.h>
 
-PyMODINIT_FUNC init_pt (void);
+PyMODINIT_FUNC initpolyadicts (void);
 
-#endif /* __ptmodule_h_DEFINED */
+#endif /* _polyadictsmodule_h_DEFINED */

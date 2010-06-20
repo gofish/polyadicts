@@ -20,43 +20,43 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
-#include "_ptmodule.h"
-#include "polyadicobject.h"
+#include "polyadictsmodule.h"
+#include "polyadicobjects.h"
 
-/* _pt module method defition */
-static PyMethodDef _pt_methods[] = {
+/* polyadicts module method defition */
+static PyMethodDef polyadicts_methods[] = {
     {NULL} // Sentinel
 };
 
-/* _pt module definition */
-static struct PyModuleDef _pt_module = {
+/* polyadicts module definition */
+static struct PyModuleDef polyadicts_module = {
     PyModuleDef_HEAD_INIT,
-    "_pt",
+    "polyadicts",
     NULL,
     0,
-    _pt_methods,
+    polyadicts_methods,
     NULL,
     NULL,
     NULL,
     NULL
 };
 
-/* _pt module initialization function */
-PyMODINIT_FUNC PyInit__pt (void)
+/* polyadicts module initialization function */
+PyMODINIT_FUNC PyInit_polyadicts (void)
 {
     // Initialize the type objects
-    if (PyType_Ready(&PyPolyadic_Type) < 0 ||
-            PyType_Ready(&PyPeanos_Type) < 0)
+    if (PyType_Ready(&PyPolyad_Type) < 0 ||
+            PyType_Ready(&PyPolyid_Type) < 0)
         return NULL;
 
     // Initialize module
-    PyObject *module = PyModule_Create(&_pt_module);
+    PyObject *module = PyModule_Create(&polyadicts_module);
     if (module != NULL) {
         // Add type object references to the module
-        Py_INCREF(&PyPolyadic_Type);
-        PyModule_AddObject(module, "polyadic", (PyObject*)&PyPolyadic_Type);
-        Py_INCREF(&PyPeanos_Type);
-        PyModule_AddObject(module, "peanos", (PyObject*)&PyPeanos_Type);
+        Py_INCREF(&PyPolyad_Type);
+        PyModule_AddObject(module, "polyad", (PyObject*)&PyPolyad_Type);
+        Py_INCREF(&PyPolyid_Type);
+        PyModule_AddObject(module, "polyid", (PyObject*)&PyPolyid_Type);
     }
     return module;
 }

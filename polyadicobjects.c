@@ -20,13 +20,13 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
-#include "polyadicobject.h"
+#include "polyadicobjects.h"
 
 void
-PyPolyadic_dealloc(PyPolyadic* self)
+PyPolyad_dealloc(PyPolyad* self)
 {
     if (self->pack)
-        polyadic_free(self->pack);
+        polyad_free(self->pack);
     if (self->src) {
         PyBuffer_Release(self->src);
         free(self->src);
@@ -35,7 +35,7 @@ PyPolyadic_dealloc(PyPolyadic* self)
 }
 
 PyObject *
-PyPolyadic_FromBuffer(Py_buffer *view, size_t off, size_t len)
+PyPolyad_FromBuffer(Py_buffer *view, size_t off, size_t len)
 {
     if (len == 0)
         len = view->len;
@@ -46,25 +46,25 @@ PyPolyadic_FromBuffer(Py_buffer *view, size_t off, size_t len)
     }
 
     /* allocate new pack object */
-    PyPolyadic *self;
-    self = (PyPolyadic*) PyPolyadic_Type.tp_alloc(&PyPolyadic_Type, 0);
+    PyPolyad *self;
+    self = (PyPolyad*) PyPolyad_Type.tp_alloc(&PyPolyad_Type, 0);
     if (!self)
         return NULL;
 
     /* allocate Py_buffer to refcount shared memory region */
     self->src = malloc(sizeof(Py_buffer));
     if (!self->src) {
-        PyPolyadic_Type.tp_free(self);
+        PyPolyad_Type.tp_free(self);
         return NULL;
     }
     *self->src = *view;
 
     /* load and initialize pack pointers from data buffer */
-    self->pack = polyadic_load(len, view->buf + off, true);
+    self->pack = polyad_load(len, view->buf + off, true);
     if (!self->pack) {
         PyErr_SetFromErrno(PyExc_ValueError);
         free(self->src);
-        PyPolyadic_Type.tp_free(self);
+        PyPolyad_Type.tp_free(self);
         return NULL;
     }
     /* prevent access to the owned buffer reference */
@@ -73,14 +73,14 @@ PyPolyadic_FromBuffer(Py_buffer *view, size_t off, size_t len)
 }
 
 PyObject *
-PyPolyadic_FromSequence(PyObject *src)
+PyPolyad_FromSequence(PyObject *src)
 {
     if (NULL == (src = PySequence_Fast(src, NULL)))
         return NULL;
 
     Py_ssize_t len = PySequence_Fast_GET_SIZE(src);
-    polyadic_t *pack;
-    pack = polyadic_prepare(len);
+    polyad_t *pack;
+    pack = polyad_prepare(len);
     if (!pack) {
         PyErr_SetFromErrno(PyExc_MemoryError);
         return NULL;
@@ -92,11 +92,11 @@ PyPolyadic_FromSequence(PyObject *src)
         PyObject *obj = PySequence_Fast_GET_ITEM(src, i);
         if (0 != PyObject_GetBuffer(obj, &view[i], PyBUF_SIMPLE))
             break;
-        polyadic_set(pack, i, view[i].len, view[i].buf, true);
+        polyad_set(pack, i, view[i].len, view[i].buf, true);
     }
 
-    if (i != len || 0 != polyadic_finish(pack)) {
-        polyadic_free(pack);
+    if (i != len || 0 != polyad_finish(pack)) {
+        polyad_free(pack);
         pack = NULL;
     }
 
@@ -107,9 +107,9 @@ PyPolyadic_FromSequence(PyObject *src)
     if (!pack)
         return NULL;
 
-    /* allocate new PyPolyadic object */
-    PyPolyadic *self;
-    self = (PyPolyadic*) PyPolyadic_Type.tp_alloc(&PyPolyadic_Type, 0);
+    /* allocate new PyPolyad object */
+    PyPolyad *self;
+    self = (PyPolyad*) PyPolyad_Type.tp_alloc(&PyPolyad_Type, 0);
     if (self) {
         self->pack = pack;
         self->src = NULL;
@@ -118,7 +118,7 @@ PyPolyadic_FromSequence(PyObject *src)
 }
 
 PyObject *
-PyPolyadic_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+PyPolyad_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PyObject *src;
     if (!PyArg_ParseTuple(args, "O", &src))
@@ -127,39 +127,39 @@ PyPolyadic_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     Py_buffer view;
     if (PyObject_CheckBuffer(src) &&
             0 == PyObject_GetBuffer(src, &view, PyBUF_SIMPLE)) {
-        PyObject *pack = PyPolyadic_FromBuffer(&view, 0, 0);
+        PyObject *pack = PyPolyad_FromBuffer(&view, 0, 0);
         if (!pack)
             PyBuffer_Release(&view);
         return pack;
     }
 
-    return PyPolyadic_FromSequence(src);
+    return PyPolyad_FromSequence(src);
 }
 
-/* PyPolyadic buffer API */
+/* PyPolyad buffer API */
 int
-PyPolyadic_getbuffer(PyPolyadic *self, Py_buffer *view, int flags)
+PyPolyad_getbuffer(PyPolyad *self, Py_buffer *view, int flags)
 {
     return PyBuffer_FillInfo(view, (PyObject*)self, self->pack->self.data,
             self->pack->self.size, true, PyBUF_SIMPLE);
 }
 
-PyBufferProcs PyPolyadic_as_buffer = {
-    (getbufferproc)PyPolyadic_getbuffer,
+PyBufferProcs PyPolyad_as_buffer = {
+    (getbufferproc)PyPolyad_getbuffer,
     NULL,
 };
 
-/* PyPolyadic sequence API */
+/* PyPolyad sequence API */
 Py_ssize_t
-PyPolyadic_length(PyObject *self)
+PyPolyad_length(PyObject *self)
 {
-    return ((PyPolyadic*)self)->pack->nitem;
+    return ((PyPolyad*)self)->pack->nitem;
 }
 
 PyObject*
-PyPolyadic_item(PyObject *obj_self, Py_ssize_t i)
+PyPolyad_item(PyObject *obj_self, Py_ssize_t i)
 {
-    PyPolyadic *self = (PyPolyadic*) obj_self;
+    PyPolyad *self = (PyPolyad*) obj_self;
     if (i >= self->pack->nitem) {
         PyErr_SetString(PyExc_IndexError, "pack index out of range");
         return NULL;
@@ -174,38 +174,38 @@ PyPolyadic_item(PyObject *obj_self, Py_ssize_t i)
     return NULL;
 }
 
-PySequenceMethods PyPolyadic_as_sequence = {
-    (lenfunc)PyPolyadic_length, /*sq_length*/
+PySequenceMethods PyPolyad_as_sequence = {
+    (lenfunc)PyPolyad_length, /*sq_length*/
     NULL,                       /*sq_concat*/
     NULL,                       /*sq_repeat*/
-    (ssizeargfunc)PyPolyadic_item,  /*sq_item*/
+    (ssizeargfunc)PyPolyad_item,  /*sq_item*/
     NULL,                       /*sq_ass_item*/
     NULL,                       /*sq_contains*/
     NULL,                       /*sq_inplace_concat*/
     NULL,                       /*sq_inplace_repeat*/
 };
 
-/* PyPolyadic type definition */
-PyTypeObject PyPolyadic_Type = {
+/* PyPolyad type definition */
+PyTypeObject PyPolyad_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "_pt.polyadic",             /*tp_name*/
-    sizeof(PyPolyadic),         /*tp_basicsize*/
+    "polyadicts.polyadic",             /*tp_name*/
+    sizeof(PyPolyad),         /*tp_basicsize*/
     0,                          /*tp_itemsize*/
-    (destructor)PyPolyadic_dealloc, /*tp_dealloc*/
+    (destructor)PyPolyad_dealloc, /*tp_dealloc*/
     0,                          /*tp_print*/
     0,                          /*tp_getattr*/
     0,                          /*tp_setattr*/
     0,                          /*tp_compare*/
     0,                          /*tp_repr*/
     0,                          /*tp_as_number*/
-    &PyPolyadic_as_sequence,    /*tp_as_sequence*/
+    &PyPolyad_as_sequence,    /*tp_as_sequence*/
     0,                          /*tp_as_mapping*/
     0,                          /*tp_hash */
     0,                          /*tp_call*/
     0,                          /*tp_str*/
     0,                          /*tp_getattro*/
     0,                          /*tp_setattro*/
-    &PyPolyadic_as_buffer,      /*tp_as_buffer*/
+    &PyPolyad_as_buffer,      /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT,         /*tp_flags*/
     "pack(bufferable | sequence)", /* tp_doc */
     0,                          /* tp_traverse */
@@ -224,16 +224,16 @@ PyTypeObject PyPolyadic_Type = {
     0,                          /* tp_dictoffset */
     0,                          /* tp_init */
     0,                          /* tp_alloc */
-    PyPolyadic_tp_new,          /* tp_new */
+    PyPolyad_tp_new,          /* tp_new */
 };
 
 
 
 void
-PyPeanos_dealloc(PyPeanos* self)
+PyPolyid_dealloc(PyPolyid* self)
 {
     if (self->pack)
-        peanos_free(self->pack);
+        polyid_free(self->pack);
     if (self->src) {
         PyBuffer_Release(self->src);
         free(self->src);
@@ -242,28 +242,28 @@ PyPeanos_dealloc(PyPeanos* self)
 }
 
 PyObject *
-PyPeanos_FromBuffer(Py_buffer *view, size_t off)
+PyPolyid_FromBuffer(Py_buffer *view, size_t off)
 {
     /* allocate new pack object */
-    PyPeanos *self;
-    self = (PyPeanos*) PyPeanos_Type.tp_alloc(&PyPeanos_Type, 0);
+    PyPolyid *self;
+    self = (PyPolyid*) PyPolyid_Type.tp_alloc(&PyPolyid_Type, 0);
     if (!self)
         return NULL;
 
     /* allocate Py_buffer to refcount shared memory region */
     self->src = malloc(sizeof(Py_buffer));
     if (!self->src) {
-        PyPeanos_Type.tp_free(self);
+        PyPolyid_Type.tp_free(self);
         return NULL;
     }
     *self->src = *view;
 
     /* load and initialize pack pointers from data buffer */
-    self->pack = peanos_load(view->buf + off, true, view->len - off);
+    self->pack = polyid_load(view->buf + off, true, view->len - off);
     if (!self->pack) {
         PyErr_SetFromErrno(PyExc_ValueError);
         free(self->src);
-        PyPeanos_Type.tp_free(self);
+        PyPolyid_Type.tp_free(self);
         return NULL;
     }
     /* prevent access to the owned buffer reference */
@@ -272,12 +272,12 @@ PyPeanos_FromBuffer(Py_buffer *view, size_t off)
 }
 
 PyObject *
-PyPeanos_FromSequence(PyObject *src)
+PyPolyid_FromSequence(PyObject *src)
 {
     if (NULL == (src = PySequence_Fast(src, NULL)))
         return NULL;
 
-    polyadic_len_t n = PySequence_Fast_GET_SIZE(src);
+    polyad_len_t n = PySequence_Fast_GET_SIZE(src);
     uint64_t *values = malloc(n * sizeof(uint64_t));
     if (!values) {
         PyErr_SetFromErrno(PyExc_MemoryError);
@@ -286,7 +286,7 @@ PyPeanos_FromSequence(PyObject *src)
     }
 
     // convert to 64-bit unsigned ints
-    polyadic_len_t i;
+    polyad_len_t i;
     for (i = 0; i < n; i++) {
         PyObject *obj = PySequence_Fast_GET_ITEM(src, i);
         if (PyLong_Check(obj)) {
@@ -297,22 +297,22 @@ PyPeanos_FromSequence(PyObject *src)
     }
     Py_DECREF(src);
     if (i != n) {
-        PyErr_SetString(PyExc_TypeError, "peanos sequence must be numbers");
+        PyErr_SetString(PyExc_TypeError, "polyid sequence must be numbers");
         free(values);
         return NULL;
     }
 
-    peanos_t *pack;
-    pack = peanos_new(n, values);
+    polyid_t *pack;
+    pack = polyid_new(n, values);
     if (!pack) {
         PyErr_SetFromErrno(PyExc_MemoryError);
         free(values);
         return NULL;
     }
 
-    /* allocate new PyPeanos object */
-    PyPeanos *self;
-    self = (PyPeanos*) PyPeanos_Type.tp_alloc(&PyPeanos_Type, 0);
+    /* allocate new PyPolyid object */
+    PyPolyid *self;
+    self = (PyPolyid*) PyPolyid_Type.tp_alloc(&PyPolyid_Type, 0);
     if (self) {
         self->pack = pack;
         self->src = NULL;
@@ -321,7 +321,7 @@ PyPeanos_FromSequence(PyObject *src)
 }
 
 PyObject *
-PyPeanos_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+PyPolyid_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PyObject *src;
     if (!PyArg_ParseTuple(args, "O", &src))
@@ -330,41 +330,41 @@ PyPeanos_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     Py_buffer view;
     if (PyObject_CheckBuffer(src) &&
             0 == PyObject_GetBuffer(src, &view, PyBUF_SIMPLE)) {
-        PyObject *pack = PyPeanos_FromBuffer(&view, 0);
+        PyObject *pack = PyPolyid_FromBuffer(&view, 0);
         if (!pack)
             PyBuffer_Release(&view);
         return pack;
     }
 
-    return PyPeanos_FromSequence(src);
+    return PyPolyid_FromSequence(src);
 }
 
 
-/* PyPeanos buffer API */
+/* PyPolyid buffer API */
 int
-PyPeanos_getbuffer(PyPeanos *self, Py_buffer *view, int flags)
+PyPolyid_getbuffer(PyPolyid *self, Py_buffer *view, int flags)
 {
     return PyBuffer_FillInfo(view, (PyObject*)self, self->pack->data,
             self->pack->size, true, PyBUF_SIMPLE);
 }
 
 
-PyBufferProcs PyPeanos_as_buffer = {
-    (getbufferproc)PyPeanos_getbuffer,
+PyBufferProcs PyPolyid_as_buffer = {
+    (getbufferproc)PyPolyid_getbuffer,
     NULL,
 };
 
-/* PyPeanos sequence API */
+/* PyPolyid sequence API */
 Py_ssize_t
-PyPeanos_length(PyObject *self)
+PyPolyid_length(PyObject *self)
 {
-    return ((PyPeanos*)self)->pack->n;
+    return ((PyPolyid*)self)->pack->n;
 }
 
 PyObject*
-PyPeanos_item(PyObject *obj_self, Py_ssize_t i)
+PyPolyid_item(PyObject *obj_self, Py_ssize_t i)
 {
-    PyPeanos *self = (PyPeanos*) obj_self;
+    PyPolyid *self = (PyPolyid*) obj_self;
     if (i >= self->pack->n) {
         PyErr_SetString(PyExc_IndexError, "pack index out of range");
         return NULL;
@@ -373,40 +373,40 @@ PyPeanos_item(PyObject *obj_self, Py_ssize_t i)
     return PyLong_FromUnsignedLong(self->pack->values[i]);
 }
 
-PySequenceMethods PyPeanos_as_sequence = {
-    (lenfunc)PyPeanos_length,   /*sq_length*/
+PySequenceMethods PyPolyid_as_sequence = {
+    (lenfunc)PyPolyid_length,   /*sq_length*/
     NULL,                       /*sq_concat*/
     NULL,                       /*sq_repeat*/
-    (ssizeargfunc)PyPeanos_item, /*sq_item*/
+    (ssizeargfunc)PyPolyid_item, /*sq_item*/
     NULL,                       /*sq_ass_item*/
     NULL,                       /*sq_contains*/
     NULL,                       /*sq_inplace_concat*/
     NULL,                       /*sq_inplace_repeat*/
 };
 
-/* PyPeanos type definition */
-PyTypeObject PyPeanos_Type = {
+/* PyPolyid type definition */
+PyTypeObject PyPolyid_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "_pt.peanos",               /*tp_name*/
-    sizeof(PyPeanos),           /*tp_basicsize*/
+    "polyadicts.polyid",               /*tp_name*/
+    sizeof(PyPolyid),           /*tp_basicsize*/
     0,                          /*tp_itemsize*/
-    (destructor)PyPeanos_dealloc, /*tp_dealloc*/
+    (destructor)PyPolyid_dealloc, /*tp_dealloc*/
     0,                          /*tp_print*/
     0,                          /*tp_getattr*/
     0,                          /*tp_setattr*/
     0,                          /*tp_compare*/
     0,                          /*tp_repr*/
     0,                          /*tp_as_number*/
-    &PyPeanos_as_sequence,      /*tp_as_sequence*/
+    &PyPolyid_as_sequence,      /*tp_as_sequence*/
     0,                          /*tp_as_mapping*/
     0,                          /*tp_hash */
     0,                          /*tp_call*/
     0,                          /*tp_str*/
     0,                          /*tp_getattro*/
     0,                          /*tp_setattro*/
-    &PyPeanos_as_buffer,        /*tp_as_buffer*/
+    &PyPolyid_as_buffer,        /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT,         /*tp_flags*/
-    "peanos(bufferable | sequence)",   /* tp_doc */
+    "polyid(bufferable | sequence)",   /* tp_doc */
     0,                          /* tp_traverse */
     0,                          /* tp_clear */
     0,                          /* tp_richcompare */
@@ -423,5 +423,5 @@ PyTypeObject PyPeanos_Type = {
     0,                          /* tp_dictoffset */
     0,                          /* tp_init */
     0,                          /* tp_alloc */
-    PyPeanos_tp_new,            /* tp_new */
+    PyPolyid_tp_new,            /* tp_new */
 };
