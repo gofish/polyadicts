@@ -50,10 +50,10 @@ trove_classifiers = [
 
 capi = Extension(
     'polyadicts',
-    ['polyadictsmodule.c',
-     'polyadicobjects.c',
-     'polyadics.c',
-     'varint.c',
+    ['src/polyadictsmodule.c',
+     'src/polyadicobjects.c',
+     'src/polyadics.c',
+     'src/varint.c',
      ],
 )
 

@@ -8,7 +8,7 @@ SETUPOPTS ?= --quiet
 
 all:	tags build
 
-tags:	*.h *.c
+tags:	src/*.h src/*.c
 	ctags -f $@ $?
 
 build bdist bdist_egg:
