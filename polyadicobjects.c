@@ -207,7 +207,7 @@ PyTypeObject PyPolyad_Type = {
     0,                          /*tp_setattro*/
     &PyPolyad_as_buffer,      /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT,         /*tp_flags*/
-    "pack(bufferable | sequence)", /* tp_doc */
+    "polyad(bufferable | sequence)", /* tp_doc */
     0,                          /* tp_traverse */
     0,                          /* tp_clear */
     0,                          /* tp_richcompare */
