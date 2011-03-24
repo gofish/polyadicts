@@ -1,17 +1,19 @@
 #!/usr/bin/make
 
 PYTHON = python3
+SETUP = setup.py
+SETUPOPTS ?= --quiet
 
 .PHONY: build
 
 all:	tags build
 
-build bdist bdist_egg:
-	$(PYTHON) setup.py $@
-
-clean:
-	$(PYTHON) setup.py clean --all
-	$(RM) -r dist/ *.egg-info/
-
 tags:	*.h *.c
 	ctags -f $@ $?
+
+build bdist bdist_egg:
+	$(PYTHON) $(SETUP) $(SETUPOPTS) $@
+
+clean:
+	$(PYTHON) $(SETUP) $(SETUPOPTS) clean --all
+	$(RM) -r dist/ *.egg-info/
