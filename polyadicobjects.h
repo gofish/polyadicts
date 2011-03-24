@@ -27,10 +27,33 @@
 #include "varint.h"
 #include "polyadics.h"
 
+typedef struct PyPolyid_st
+{
+    PyObject_HEAD
+    /* underlying C polyid object */
+    polyid_t *pack;
+    /* references to parent buffer object, if used */
+    Py_buffer *src;
+} PyPolyid;
+
+/* PyPolyid API */
+PyAPI_DATA(PyTypeObject) PyPolyid_Type;
+PyAPI_FUNC(void) PyPolyid_dealloc(PyPolyid *self);
+PyAPI_FUNC(PyObject *) PyPolyid_tp_new(PyTypeObject *type, PyObject *args,
+        PyObject *kwargs);
+/* PyPolyid buffer API */
+PyAPI_FUNC(PyObject *) PyPolyid_FromBuffer(Py_buffer *view, size_t off);
+PyAPI_FUNC(int) PyPolyid_getbuffer(PyPolyid *self, Py_buffer *view,
+        int flags);
+/* PyPolyid sequence API */
+PyAPI_FUNC(PyObject *) PyPolyid_FromSequence(PyObject *seq);
+PyAPI_FUNC(Py_ssize_t) PyPolyid_length(PyObject *self);
+PyAPI_FUNC(PyObject *) PyPolyid_item(PyObject *self, Py_ssize_t i);
+
 typedef struct PyPolyad_st
 {
     PyObject_HEAD
-    /* underlying C pack object */
+    /* underlying C polyad object */
     polyad_t *pack;
     /* references to parent buffer object, if used */
     Py_buffer *src;
@@ -52,29 +75,5 @@ PyAPI_FUNC(PyObject *) PyPolyad_item(PyObject *self, Py_ssize_t i);
 
 /* PyPolyad type definition */
 PyAPI_DATA(PyTypeObject) PyPolyad_Type;
-
-
-typedef struct PyPolyid_st
-{
-    PyObject_HEAD
-    /* underlying C pack object */
-    polyid_t *pack;
-    /* references to parent buffer object, if used */
-    Py_buffer *src;
-} PyPolyid;
-
-/* PyPolyid API */
-PyAPI_DATA(PyTypeObject) PyPolyid_Type;
-PyAPI_FUNC(void) PyPolyid_dealloc(PyPolyid *self);
-PyAPI_FUNC(PyObject *) PyPolyid_tp_new(PyTypeObject *type, PyObject *args,
-        PyObject *kwargs);
-/* PyPolyid buffer API */
-PyAPI_FUNC(PyObject *) PyPolyid_FromBuffer(Py_buffer *view, size_t off);
-PyAPI_FUNC(int) PyPolyid_getbuffer(PyPolyid *self, Py_buffer *view,
-        int flags);
-/* PyPolyid sequence API */
-PyAPI_FUNC(PyObject *) PyPolyid_FromSequence(PyObject *seq);
-PyAPI_FUNC(Py_ssize_t) PyPolyid_length(PyObject *self);
-PyAPI_FUNC(PyObject *) PyPolyid_item(PyObject *self, Py_ssize_t i);
 
 #endif

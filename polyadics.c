@@ -29,267 +29,6 @@
 #include "polyadics.h"
 #include "varint.h"
 
-polyad_t* polyad_prepare(polyad_len_t nitem)
-{
-    polyad_t *polyad;
-
-    polyad = malloc(sizeof(polyad_t));
-    if (polyad) {
-        polyad->self.size = 0;
-        polyad->self.data = NULL;
-        polyad->self.shared = true;
-        polyad->item = malloc(nitem * sizeof(polyad_info_t));
-        if (polyad->item) {
-            polyad_len_t i;
-            for (i = 0; i < nitem; i++) {
-                polyad->item[i].size = 0;
-                polyad->item[i].data = NULL;
-                polyad->item[i].shared = true;
-            }
-            polyad->nitem = nitem;
-        }else {
-            free(polyad);
-            polyad = NULL;
-        }
-    }
-    return polyad;
-}
-
-int polyad_set(polyad_t *polyad, polyad_len_t i, size_t size, void *data, bool shared)
-{
-    assert(polyad);
-
-    int retval;
-    if (i < polyad->nitem) {
-        if (polyad->item[i].data && !polyad->item[i].shared)
-            free(polyad->item[i].data);
-        polyad->item[i].size = size;
-        polyad->item[i].data = data;
-        polyad->item[i].shared = shared;
-        retval = 0;
-    } else {
-        errno = EINVAL;
-        retval = -1;
-    }
-    return retval;
-}
-
-int polyad_finish(polyad_t *polyad)
-{
-    assert(polyad);
-
-    int retval;
-    polyad_len_t i;
-    size_t head_size, tmp;
-    /* count header size and total required buffer size */
-    head_size = 0;
-    polyad->self.size = 0;
-    for (i = 0; i < polyad->nitem; i++) {
-        /* size of item */
-        polyad->self.size += polyad->item[i].size;
-        /* size of varint to required to represent item size */
-        tmp = uint64_len(polyad->item[i].size);
-        head_size += tmp;
-        polyad->self.size += tmp;
-    }
-
-    polyad->self.data = malloc(polyad->self.size);
-    if (polyad->self.data) {
-        void *head, *tail;
-        head = polyad->self.data;
-        tail = polyad->self.data + head_size;
-        polyad->self.shared = false;
-
-        for (i = 0; i < polyad->nitem; i++) {
-            head += uint64_to_vi(polyad->item[i].size, head);
-            /* copy item data to shared buffer */
-            memcpy(tail, polyad->item[i].data, polyad->item[i].size);
-            /* free old data */
-            if (!polyad->item[i].shared)
-                free(polyad->item[i].data);
-            /* point item data to location in shared buffer */
-            polyad->item[i].data = tail;
-            polyad->item[i].shared = true;
-            tail += polyad->item[i].size;
-        }
-        assert(head == polyad->self.data + head_size);
-        assert(tail == polyad->self.data + polyad->self.size);
-        retval = 0;
-    } else {
-        retval = -1;
-    }
-
-    return retval;
-}
-
-polyad_t* polyad_load(size_t size, void *data, bool shared)
-{
-    polyad_t *polyad;
-
-    polyad = malloc(sizeof(polyad_t));
-    if (polyad) {
-        vi_size_t vi_size;
-        void *head, *tail;
-        uint64_t item_size;
-
-        polyad->self.size = size;
-        polyad->self.data = data;
-        polyad->self.shared = shared;
-        polyad->nitem = 0;
-        polyad->item = NULL;
-
-        /* scan header to count items */
-        head = data;
-        tail = data + size;
-        while (head < tail) {
-            vi_size = vi_to_uint64(head, &item_size);
-            if (vi_size < 0)
-                break;
-            head += vi_size;
-            tail -= item_size;
-            polyad->nitem++;
-        }
-
-        if (head == tail) {
-            /* allocate item array and scan header again for item offsets */
-            polyad->item = malloc(polyad->nitem * sizeof(polyad_info_t));
-            if (polyad->item) {
-                polyad_len_t i;
-                head = data;
-                for (i = 0; i < polyad->nitem; i++) {
-                    vi_size = vi_to_uint64(head, &item_size);
-                    assert(vi_size);
-                    polyad->item[i].size = item_size;
-                    polyad->item[i].data = tail;
-                    polyad->item[i].shared = true;
-                    head += vi_size;
-                    tail += item_size;
-                }
-            } else {
-                free(polyad);
-                polyad = NULL;
-            }
-        }else {
-            free(polyad);
-            polyad = NULL;
-            errno = EINVAL;
-        }
-    }
-    return polyad;
-}
-
-void polyad_free(polyad_t *polyad)
-{
-    assert(polyad);
-
-    polyad_len_t i;
-    for (i = 0; i < polyad->nitem; i++) {
-        if (!polyad->item[i].shared)
-            free(polyad->item[i].data);
-    }
-    if (!polyad->self.shared)
-        free(polyad->self.data);
-    free(polyad->item);
-    free(polyad);
-}
-
-#if 0
-
-polyid_t* polyid_prepare(polyad_len_t nitem)
-{
-    polyid_t *pack;
-
-    pack = malloc(sizeof(polyid_t));
-    if (pack) {
-        pack->self.size = 0;
-        pack->self.data = NULL;
-        pack->self.shared = true;
-        pack->item = malloc(nitem * sizeof(pack_info_t));
-        if (pack->item) {
-            polyad_len_t i;
-            for (i = 0; i < nitem; i++) {
-                pack->item[i].size = 0;
-                pack->item[i].data = NULL;
-                pack->item[i].shared = true;
-            }
-            pack->nitem = nitem;
-        }else {
-            free(pack);
-            pack = NULL;
-        }
-    }
-    return pack;
-}
-
-int polyid_set(polyid_t *pack, polyad_len_t i, size_t size, void *data, bool shared)
-{
-    assert(pack);
-
-    int retval;
-    if (i < pack->nitem) {
-        if (pack->item[i].data && !pack->item[i].shared)
-            free(pack->item[i].data);
-        pack->item[i].size = size;
-        pack->item[i].data = data;
-        pack->item[i].shared = shared;
-        retval = 0;
-    } else {
-        errno = EINVAL;
-        retval = -1;
-    }
-    return retval;
-}
-
-int polyid_finish(polyid_t *pack)
-{
-    assert(pack);
-
-    int retval;
-    polyad_len_t i;
-    size_t head_size, tmp;
-    /* count header size and total required buffer size */
-    head_size = 0;
-    pack->self.size = 0;
-    for (i = 0; i < pack->nitem; i++) {
-        /* size of item */
-        pack->self.size += pack->item[i].size;
-        /* size of varint to required to represent item size */
-        tmp = uint64_len(pack->item[i].size);
-        head_size += tmp;
-        pack->self.size += tmp;
-    }
-
-    pack->self.data = malloc(pack->self.size);
-    if (pack->self.data) {
-        void *head, *tail;
-        head = pack->self.data;
-        tail = pack->self.data + head_size;
-        pack->self.shared = false;
-
-        for (i = 0; i < pack->nitem; i++) {
-            head += uint64_to_vi(pack->item[i].size, head);
-            /* copy item data to shared buffer */
-            memcpy(tail, pack->item[i].data, pack->item[i].size);
-            /* free old data */
-            if (!pack->item[i].shared)
-                free(pack->item[i].data);
-            /* point item data to location in shared buffer */
-            pack->item[i].data = tail;
-            pack->item[i].shared = true;
-            tail += pack->item[i].size;
-        }
-        assert(head == pack->self.data + head_size);
-        assert(tail == pack->self.data + pack->self.size);
-        retval = 0;
-    } else {
-        retval = -1;
-    }
-
-    return retval;
-}
-
-#endif
-
 polyid_t* polyid_new(polyad_len_t n, uint64_t *values)
 {
     polyid_t *pack;
@@ -394,4 +133,168 @@ void polyid_free(polyid_t *pack)
         free(pack->data);
     free(pack->values);
     free(pack);
+}
+
+polyad_t* polyad_load(size_t size, void *data, bool shared)
+{
+    polyad_t *polyad;
+
+    polyad = malloc(sizeof(polyad_t));
+    if (polyad) {
+        vi_size_t vi_size;
+        void *head, *tail;
+        uint64_t item_size;
+
+        polyad->self.size = size;
+        polyad->self.data = data;
+        polyad->self.shared = shared;
+        polyad->nitem = 0;
+        polyad->item = NULL;
+
+        /* scan header to count items */
+        head = data;
+        tail = data + size;
+        while (head < tail) {
+            vi_size = vi_to_uint64(head, &item_size);
+            if (vi_size < 0)
+                break;
+            head += vi_size;
+            tail -= item_size;
+            polyad->nitem++;
+        }
+
+        if (head == tail) {
+            /* allocate item array and scan header again for item offsets */
+            polyad->item = malloc(polyad->nitem * sizeof(polyad_info_t));
+            if (polyad->item) {
+                polyad_len_t i;
+                head = data;
+                for (i = 0; i < polyad->nitem; i++) {
+                    vi_size = vi_to_uint64(head, &item_size);
+                    assert(vi_size);
+                    polyad->item[i].size = item_size;
+                    polyad->item[i].data = tail;
+                    polyad->item[i].shared = true;
+                    head += vi_size;
+                    tail += item_size;
+                }
+            } else {
+                free(polyad);
+                polyad = NULL;
+            }
+        }else {
+            free(polyad);
+            polyad = NULL;
+            errno = EINVAL;
+        }
+    }
+    return polyad;
+}
+
+void polyad_free(polyad_t *polyad)
+{
+    assert(polyad);
+
+    polyad_len_t i;
+    for (i = 0; i < polyad->nitem; i++) {
+        if (!polyad->item[i].shared)
+            free(polyad->item[i].data);
+    }
+    if (!polyad->self.shared)
+        free(polyad->self.data);
+    free(polyad->item);
+    free(polyad);
+}
+
+polyad_t* polyad_prepare(polyad_len_t nitem)
+{
+    polyad_t *polyad;
+
+    polyad = malloc(sizeof(polyad_t));
+    if (polyad) {
+        polyad->self.size = 0;
+        polyad->self.data = NULL;
+        polyad->self.shared = true;
+        polyad->item = malloc(nitem * sizeof(polyad_info_t));
+        if (polyad->item) {
+            polyad_len_t i;
+            for (i = 0; i < nitem; i++) {
+                polyad->item[i].size = 0;
+                polyad->item[i].data = NULL;
+                polyad->item[i].shared = true;
+            }
+            polyad->nitem = nitem;
+        }else {
+            free(polyad);
+            polyad = NULL;
+        }
+    }
+    return polyad;
+}
+
+int polyad_set(polyad_t *polyad, polyad_len_t i, size_t size, void *data, bool shared)
+{
+    assert(polyad);
+
+    int retval;
+    if (i < polyad->nitem) {
+        if (polyad->item[i].data && !polyad->item[i].shared)
+            free(polyad->item[i].data);
+        polyad->item[i].size = size;
+        polyad->item[i].data = data;
+        polyad->item[i].shared = shared;
+        retval = 0;
+    } else {
+        errno = EINVAL;
+        retval = -1;
+    }
+    return retval;
+}
+
+int polyad_finish(polyad_t *polyad)
+{
+    assert(polyad);
+
+    int retval;
+    polyad_len_t i;
+    size_t head_size, tmp;
+    /* count header size and total required buffer size */
+    head_size = 0;
+    polyad->self.size = 0;
+    for (i = 0; i < polyad->nitem; i++) {
+        /* size of item */
+        polyad->self.size += polyad->item[i].size;
+        /* size of varint to required to represent item size */
+        tmp = uint64_len(polyad->item[i].size);
+        head_size += tmp;
+        polyad->self.size += tmp;
+    }
+
+    polyad->self.data = malloc(polyad->self.size);
+    if (polyad->self.data) {
+        void *head, *tail;
+        head = polyad->self.data;
+        tail = polyad->self.data + head_size;
+        polyad->self.shared = false;
+
+        for (i = 0; i < polyad->nitem; i++) {
+            head += uint64_to_vi(polyad->item[i].size, head);
+            /* copy item data to shared buffer */
+            memcpy(tail, polyad->item[i].data, polyad->item[i].size);
+            /* free old data */
+            if (!polyad->item[i].shared)
+                free(polyad->item[i].data);
+            /* point item data to location in shared buffer */
+            polyad->item[i].data = tail;
+            polyad->item[i].shared = true;
+            tail += polyad->item[i].size;
+        }
+        assert(head == polyad->self.data + head_size);
+        assert(tail == polyad->self.data + polyad->self.size);
+        retval = 0;
+    } else {
+        retval = -1;
+    }
+
+    return retval;
 }

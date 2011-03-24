@@ -16,7 +16,7 @@
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
-* and the GNU Lesser Public License along with PerTwisted.  If not, see
+** and the GNU Lesser Public License along with PerTwisted.  If not, see
 ** <http://www.gnu.org/licenses/>.
 */
 
