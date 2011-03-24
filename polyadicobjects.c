@@ -33,7 +33,7 @@ PyPolyid_dealloc(PyPolyid* self)
         polyid_free(self->pack);
     if (self->src) {
         PyBuffer_Release(self->src);
-        free(self->src);
+        PyMem_Free(self->src);
     }
     self->ob_base.ob_type->tp_free((PyObject*)self);
 }
@@ -48,7 +48,7 @@ PyPolyid_FromBuffer(Py_buffer *view, size_t off)
         return NULL;
 
     /* allocate Py_buffer to refcount shared memory region */
-    self->src = malloc(sizeof(Py_buffer));
+    self->src = PyMem_Malloc(sizeof(Py_buffer));
     if (!self->src) {
         PyPolyid_Type.tp_free(self);
         return NULL;
@@ -59,7 +59,7 @@ PyPolyid_FromBuffer(Py_buffer *view, size_t off)
     self->pack = polyid_load(view->buf + off, true, view->len - off);
     if (!self->pack) {
         PyErr_SetFromErrno(PyExc_ValueError);
-        free(self->src);
+        PyMem_Free(self->src);
         PyPolyid_Type.tp_free(self);
         return NULL;
     }
@@ -74,6 +74,7 @@ PyPolyid_FromSequence(PyObject *src)
     if (NULL == (src = PySequence_Fast(src, NULL)))
         return NULL;
 
+    /* don't use PyMem_Malloc, since passing values off to polyid code */
     polyad_len_t n = PySequence_Fast_GET_SIZE(src);
     uint64_t *values = malloc(n * sizeof(uint64_t));
     if (!values) {
@@ -82,7 +83,7 @@ PyPolyid_FromSequence(PyObject *src)
         return NULL;
     }
 
-    // convert to 64-bit unsigned ints
+    /* convert to 64-bit unsigned ints */
     polyad_len_t i;
     for (i = 0; i < n; i++) {
         PyObject *obj = PySequence_Fast_GET_ITEM(src, i);
@@ -106,6 +107,7 @@ PyPolyid_FromSequence(PyObject *src)
         free(values);
         return NULL;
     }
+    /* 'pack' took ownership of 'values' */
 
     /* allocate new PyPolyid object */
     PyPolyid *self;
@@ -233,7 +235,7 @@ PyPolyad_dealloc(PyPolyad* self)
         polyad_free(self->pack);
     if (self->src) {
         PyBuffer_Release(self->src);
-        free(self->src);
+        PyMem_Del(self->src);
     }
     self->ob_base.ob_type->tp_free((PyObject*)self);
 }
@@ -256,7 +258,7 @@ PyPolyad_FromBuffer(Py_buffer *view, size_t off, size_t len)
         return NULL;
 
     /* allocate Py_buffer to refcount shared memory region */
-    self->src = malloc(sizeof(Py_buffer));
+    self->src = PyMem_Malloc(sizeof(Py_buffer));
     if (!self->src) {
         PyPolyad_Type.tp_free(self);
         return NULL;
@@ -267,7 +269,7 @@ PyPolyad_FromBuffer(Py_buffer *view, size_t off, size_t len)
     self->pack = polyad_load(len, view->buf + off, true);
     if (!self->pack) {
         PyErr_SetFromErrno(PyExc_ValueError);
-        free(self->src);
+        PyMem_Free(self->src);
         PyPolyad_Type.tp_free(self);
         return NULL;
     }
