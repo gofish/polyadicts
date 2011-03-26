@@ -23,19 +23,32 @@
 #include <stdint.h>
 #include <unistd.h>
 
-typedef uint8_t varint;
+typedef uint64_t varint;
 typedef uint8_t vi_size_t;
+typedef uint8_t vi_data_t;
 
-static const vi_size_t MAX_VARINT_LEN = 10;
+static const uint64_t VI_MAX = (1ll << (7 * sizeof(varint))) - 1;
 
-vi_size_t vi_to_uint64  (const varint *vi, uint64_t *value);
-vi_size_t vi_to_uint64_2(const varint *vi, uint64_t *value, size_t maxlen);
-vi_size_t uint64_to_vi  (uint64_t value, varint *vi);
+vi_size_t vi_to_uint64  (const varint *, uint64_t *);
+vi_size_t vi_to_uint64_2(const varint *, uint64_t *, size_t);
+vi_size_t uint64_to_vi  (uint64_t, varint *);
 
-vi_size_t vi_copy(const varint *in, varint *out);
-vi_size_t vi_pad(varint *in, vi_size_t len);
+vi_size_t vi_copy(const varint *, varint *);
 
-vi_size_t uint64_len (uint64_t value);
-vi_size_t uint64_log2(uint64_t value);
+vi_size_t uint64_log2(uint64_t);
+#define uint64_vi_len(x) (uint64_log2(x) / 7 + 1)
+
+static inline vi_data_t vi_rv(const varint *vi, vi_size_t i)
+{
+    return ((vi_data_t *)vi)[i & (sizeof(varint) - 1)];
+}
+
+static inline varint* vi_step(varint *vi, uint64_t *x)
+{
+    vi_size_t n;
+    n = vi_to_uint64(vi,x);
+    if (!n) return 0;
+    return (varint *)((vi_data_t *)vi + n);
+}
 
 #endif /* _varint_h_DEFINED */

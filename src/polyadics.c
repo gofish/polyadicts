@@ -39,9 +39,9 @@ polyid_t* polyid_new(polyad_len_t n, uint64_t *values)
         pack->values = values; // take control of the values array
 
         // calculate resulting size
-        pack->size = uint64_len(n);
+        pack->size = uint64_vi_len(n);
         for (i = 0; i < n; i++)
-            pack->size += uint64_len(values[i]);
+            pack->size += uint64_vi_len(values[i]);
 
         pack->data = malloc(pack->size);
         if (pack->data) {
@@ -262,7 +262,7 @@ int polyad_finish(polyad_t *polyad)
         /* size of item */
         polyad->self.size += polyad->item[i].size;
         /* size of varint to required to represent item size */
-        tmp = uint64_len(polyad->item[i].size);
+        tmp = uint64_vi_len(polyad->item[i].size);
         head_size += tmp;
         polyad->self.size += tmp;
     }
