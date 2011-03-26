@@ -84,15 +84,17 @@ PyPolyid_FromSequence(PyObject *src)
     polyad_len_t i;
     for (i = 0; i < n; i++) {
         PyObject *obj = PySequence_Fast_GET_ITEM(src, i);
-        if (PyLong_Check(obj)) {
-            values[i] = PyLong_AsUnsignedLong(obj);
-        } else {
-            break;
-        }
+        if (!PyLong_Check(obj)) break;
+        values[i] = PyLong_AsUnsignedLongLong(obj);
+        if (values[i] != (unsigned long long)-1) continue;
+        if (PyErr_Occurred()) break;
     }
     Py_DECREF(src);
     if (i != n) {
-        PyErr_SetString(PyExc_TypeError, "polyid sequence must be numbers");
+        if (!PyErr_Occurred()) {
+            PyErr_SetString(PyExc_TypeError,
+                    "polyid sequence must be numbers");
+        }
         free(values);
         return NULL;
     }
@@ -164,7 +166,7 @@ PyPolyid_item(PyObject *obj_self, Py_ssize_t i)
         return NULL;
     }
 
-    return PyLong_FromUnsignedLong(self->pack->values[i]);
+    return PyLong_FromUnsignedLongLong(self->pack->values[i]);
 }
 
 PySequenceMethods PyPolyid_as_sequence = {
