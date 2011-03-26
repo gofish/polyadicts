@@ -55,7 +55,12 @@ PyPolyid_FromBuffer(Py_buffer *view, size_t off)
     /* load and initialize pack pointers from data buffer */
     self->pack = polyid_load(view->buf + off, true, view->len - off);
     if (!self->pack) {
-        PyErr_SetFromErrno(PyExc_ValueError);
+        if (errno == ERANGE)
+            PyErr_SetFromErrno(PyExc_OverflowError);
+        else if (errno == ENOMEM)
+            PyErr_SetFromErrno(PyExc_MemoryError);
+        else
+            PyErr_SetFromErrno(PyExc_ValueError);
         PyMem_Free(self->src);
         PyPolyid_Type.tp_free(self);
         return NULL;
@@ -102,7 +107,12 @@ PyPolyid_FromSequence(PyObject *src)
     polyid_t *pack;
     pack = polyid_new(n, values);
     if (!pack) {
-        PyErr_SetFromErrno(PyExc_MemoryError);
+        if (errno == ERANGE)
+            PyErr_SetFromErrno(PyExc_OverflowError);
+        else if (errno == ENOMEM)
+            PyErr_SetFromErrno(PyExc_MemoryError);
+        else
+            PyErr_SetFromErrno(PyExc_SystemError);
         free(values);
         return NULL;
     }
@@ -267,7 +277,10 @@ PyPolyad_FromBuffer(Py_buffer *view, size_t off, size_t len)
     /* load and initialize pack pointers from data buffer */
     self->pack = polyad_load(len, view->buf + off, true);
     if (!self->pack) {
-        PyErr_SetFromErrno(PyExc_ValueError);
+        if (errno == ENOMEM)
+            PyErr_SetFromErrno(PyExc_MemoryError);
+        else
+            PyErr_SetFromErrno(PyExc_ValueError);
         PyMem_Free(self->src);
         PyPolyad_Type.tp_free(self);
         return NULL;
