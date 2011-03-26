@@ -7,24 +7,35 @@ def main(buildroot='build'):
     if buildroot is not None:
         dopath(buildroot)
 
-    global pd
+    global pd, libpath
     try:
         import polyadicts as pd
     except ImportError:
-        raise SystemExit('fatal: polyadicts is missing!\n\tbuildroot: %r' %
-                buildroot)
+        raise
+        raise SystemExit(
+                'fatal: polyadicts is missing!\n'
+                '\tbuildroot: %r\n'
+                '\tlibpath: %r\n' %
+                (buildroot, libpath))
 
     test_polyid_from_bytes()
     test_polyid_from_sequence()
+    test_polyid_range()
+    test_polyid_erange()
+    test_polyid_einval()
+
     test_polyad_from_bytes()
     test_polyad_from_sequence()
+    test_polyad_einval()
 
 def dopath(buildroot):
+    global libpath
     lsystem = platform.system().lower()
     machine = platform.machine()
     version = '.'.join(platform.python_version_tuple()[:2])
     libpath = '%(buildroot)s/lib.%(lsystem)s-%(machine)s-%(version)s'
-    sys.path.append(libpath % locals())
+    libpath %= locals()
+    sys.path.append(libpath)
 
 def test_polyid_from_bytes():
     b = b'\x01\x00'
@@ -50,6 +61,52 @@ def test_polyid_from_sequence():
         assert(a == p[i])
         a, b = b, a + b
 
+def test_polyid_range():
+    n = (1 << 56) - 1
+    b = b'\x01\xff\xff\xff\xff\xff\xff\xff\x7f'
+    p = pd.polyid([n])
+    assert(1 == len(p))
+    assert(n == p[0])
+    assert(b == bytes(p))
+    p = pd.polyid(b)
+    assert(1 == len(p))
+    assert(n == p[0])
+    assert(b == bytes(p))
+
+def test_polyid_erange():
+    try:
+        p = pd.polyid([1 << 64])
+    except OverflowError:
+        pass
+    else:
+        assert(False)
+    try:
+        p = pd.polyid([1 << 56])
+    except OverflowError:
+        pass
+    else:
+        assert(False)
+    try:
+        p = pd.polyid(b'\x01\xff\xff\xff\xff\xff\xff\xff\xff\x01')
+    except OverflowError:
+        pass
+    else:
+        assert(False);
+
+def test_polyid_einval():
+    try:
+        p = pd.polyid(b'\x01')
+    except ValueError:
+        pass
+    else:
+        assert(False)
+    try:
+        p = pd.polyid(b'\x01\xff')
+    except ValueError:
+        pass
+    else:
+        assert(False)
+
 def test_polyad_from_bytes():
     b = b'\x05\x05helloworld'
     p = pd.polyad(b)
@@ -65,6 +122,14 @@ def test_polyad_from_sequence():
     assert('hello' == str(p[0], 'ascii'))
     assert('world' == str(p[1], 'ascii'))
     assert(b'\x05\x05helloworld' == bytes(p))
+
+def test_polyad_einval():
+    try:
+        p = pd.polyad(b'\x05')
+    except ValueError:
+        pass
+    else:
+        assert(False)
 
 if __name__ == '__main__':
     main(*sys.argv[1:])
