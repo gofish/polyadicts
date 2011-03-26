@@ -88,11 +88,16 @@ polyid_t* polyid_load(void *data, bool shared, size_t maxlen)
             free(pack);
             return NULL;
         }
+        maxlen -= vi_size;
+        if (!maxlen) {
+            errno = EINVAL;
+            free(pack);
+            return NULL;
+        }
 
         // allocate a lookup table
         pack->n = n;
         data += vi_size;
-        maxlen -= vi_size;
         pack->values = malloc(pack->n * sizeof(uint64_t));
         if (!pack->values) {
             free(pack);
