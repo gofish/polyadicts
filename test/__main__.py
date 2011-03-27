@@ -20,12 +20,14 @@ def main(buildroot='build'):
 
     test_polyid_from_bytes()
     test_polyid_from_sequence()
+    test_polyid_from_other()
     test_polyid_range()
     test_polyid_erange()
     test_polyid_einval()
 
     test_polyad_from_bytes()
     test_polyad_from_sequence()
+    test_polyad_from_other()
     test_polyad_einval()
 
 def dopath(buildroot):
@@ -75,6 +77,12 @@ def test_polyid_from_sequence():
         assert(a == p[i])
         a, b = b, a + b
 
+def test_polyid_from_other():
+    assert_raises(TypeError, pd.polyid, None)
+    assert_raises(TypeError, pd.polyid, 1)
+    assert_raises(TypeError, pd.polyid, 'foo')
+    assert_raises(TypeError, pd.polyid, ['hello', 'world'])
+
 def test_polyid_range():
     n = (1 << 56) - 1
     b = b'\x01\xff\xff\xff\xff\xff\xff\xff\x7f'
@@ -112,6 +120,13 @@ def test_polyad_from_sequence():
     assert('hello' == str(p[0], 'ascii'))
     assert('world' == str(p[1], 'ascii'))
     assert(b'\x05\x05helloworld' == bytes(p))
+
+def test_polyad_from_other():
+    assert_raises(TypeError, pd.polyad, None)
+    assert_raises(TypeError, pd.polyad, 1)
+    assert_raises(TypeError, pd.polyad, 'foo')
+    assert_raises(TypeError, pd.polyad, range(2))
+    assert_raises(TypeError, pd.polyad, ['hello', 'world'])
 
 def test_polyad_einval():
     assert_raises(ValueError, pd.polyad, b'\x05')
