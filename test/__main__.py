@@ -37,6 +37,20 @@ def dopath(buildroot):
     libpath %= locals()
     sys.path.append(libpath)
 
+def assert_raises(err, f, *args, **kwds):
+    ret = None
+    try:
+        ret = f(*args, **kwds)
+    except err:
+        pass
+    except Exception:
+        if err:
+            raise
+    else:
+        if err:
+            raise AssertionError("did not raise %r" % err)
+    return ret
+
 def test_polyid_from_bytes():
     b = b'\x01\x00'
     p = pd.polyid(b)
@@ -74,38 +88,14 @@ def test_polyid_range():
     assert(b == bytes(p))
 
 def test_polyid_erange():
-    try:
-        p = pd.polyid([1 << 64])
-    except OverflowError:
-        pass
-    else:
-        assert(False)
-    try:
-        p = pd.polyid([1 << 56])
-    except OverflowError:
-        pass
-    else:
-        assert(False)
-    try:
-        p = pd.polyid(b'\x01\xff\xff\xff\xff\xff\xff\xff\xff\x01')
-    except OverflowError:
-        pass
-    else:
-        assert(False);
+    assert_raises(OverflowError, pd.polyid, [1 << 64])
+    assert_raises(OverflowError, pd.polyid, [1 << 56])
+    assert_raises(OverflowError, pd.polyid,
+            b'\x01\xff\xff\xff\xff\xff\xff\xff\xff\x01')
 
 def test_polyid_einval():
-    try:
-        p = pd.polyid(b'\x01')
-    except ValueError:
-        pass
-    else:
-        assert(False)
-    try:
-        p = pd.polyid(b'\x01\xff')
-    except ValueError:
-        pass
-    else:
-        assert(False)
+    assert_raises(ValueError, pd.polyid, b'\x01')
+    assert_raises(ValueError, pd.polyid, b'\x01\xff')
 
 def test_polyad_from_bytes():
     b = b'\x05\x05helloworld'
@@ -124,12 +114,7 @@ def test_polyad_from_sequence():
     assert(b'\x05\x05helloworld' == bytes(p))
 
 def test_polyad_einval():
-    try:
-        p = pd.polyad(b'\x05')
-    except ValueError:
-        pass
-    else:
-        assert(False)
+    assert_raises(ValueError, pd.polyad, b'\x05')
 
 if __name__ == '__main__':
     main(*sys.argv[1:])
