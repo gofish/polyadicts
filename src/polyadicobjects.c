@@ -315,6 +315,8 @@ PyPolyad_FromSequence(PyObject *src, const char *errmsg)
     }
 
     if (i != len || 0 != polyad_finish(pack)) {
+        if (!PyErr_Occurred())
+            PyErr_SetFromErrno(PyExc_MemoryError);
         polyad_free(pack);
         pack = NULL;
     }
