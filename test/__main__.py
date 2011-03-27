@@ -29,6 +29,7 @@ def main(buildroot='build'):
     test_polyad_from_sequence()
     test_polyad_from_other()
     test_polyad_einval()
+    test_polyad_enomem()
 
 def dopath(buildroot):
     global libpath
@@ -135,6 +136,19 @@ def test_polyad_from_other():
 
 def test_polyad_einval():
     assert_raises(ValueError, pd.polyad, b'\x05')
+
+def test_polyad_enomem():
+    from resource import getrlimit, getrusage, setrlimit
+    from resource import RLIMIT_AS
+    n = 16 * (1 << 20)
+    b = b'\x00' * n
+
+    soft, hard = getrlimit(RLIMIT_AS)
+    setrlimit(RLIMIT_AS, (n, hard))
+    try:
+        assert_raises(MemoryError, pd.polyad, [b])
+    finally:
+        setrlimit(RLIMIT_AS, (soft, hard))
 
 if __name__ == '__main__':
     main(*sys.argv[1:])
