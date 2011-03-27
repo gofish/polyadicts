@@ -12,12 +12,12 @@ url          = 'http://www.github.com/jfishman/polyadicts'
 license      = 'GNU GPL v3'
 test_suite   = 'pt.test.suite'
 
-long_description = '''Polyadts: addicted to data encapsulation.
+long_description = '''Polyadicts: addicted to data encapsulation.
 
-Polyadts is implemented in C and Python.  Any feedback, questions, or
+Polyadicts is implemented in C and Python.  Any feedback, questions, or
 comments, should go to jeremy.r.fishman@gmail.com.
 
-Polyadts is Copyright (c) by Jeremy R. Fishman and is distributed
+Polyadicts is Copyright (c) by Jeremy R. Fishman and is distributed
 under the GNU General Public License (GPL) version 3 or at your option
 any later version.  This software comes with absolutely no warranties,
 either expressed or implied.'''
@@ -32,20 +32,12 @@ trove_classifiers = [
     'Intended Audience :: Developers',
     'License :: OSI Approved :: GNU General Public License (GPL)',
     'Natural Language :: English',
-    'Operating System :: Microsoft :: Windows',
-    'Operating System :: MacOS :: MacOS X',
     'Operating System :: POSIX :: Linux',
     'Programming Language :: Python :: 3.1',
     'Programming Language :: Python',
     'Programming Language :: C',
-    'Topic :: Database',
-    'Topic :: Internet',
     'Topic :: Software Development',
-    'Topic :: System',
     'Topic :: System :: Archiving',
-    'Topic :: System :: Filesystems',
-    'Topic :: System :: Networking',
-    'Topic :: System :: Software Distribution',
     ]
 
 capi = Extension(
