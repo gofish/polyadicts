@@ -71,9 +71,9 @@ PyPolyid_FromBuffer(Py_buffer *view, size_t off)
 }
 
 PyObject *
-PyPolyid_FromSequence(PyObject *src)
+PyPolyid_FromSequence(PyObject *src, const char *errmsg)
 {
-    if (NULL == (src = PySequence_Fast(src, NULL)))
+    if (NULL == (src = PySequence_Fast(src, errmsg)))
         return NULL;
 
     /* don't use PyMem_Malloc, since passing values off to polyid code */
@@ -144,7 +144,8 @@ PyPolyid_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return pack;
     }
 
-    return PyPolyid_FromSequence(src);
+    return PyPolyid_FromSequence(src,
+            "expected a sequence (encode) or bufferable (decode)");
 }
 
 /* PyPolyid buffer API */
@@ -291,9 +292,9 @@ PyPolyad_FromBuffer(Py_buffer *view, size_t off, size_t len)
 }
 
 PyObject *
-PyPolyad_FromSequence(PyObject *src)
+PyPolyad_FromSequence(PyObject *src, const char *errmsg)
 {
-    if (NULL == (src = PySequence_Fast(src, NULL)))
+    if (NULL == (src = PySequence_Fast(src, errmsg)))
         return NULL;
 
     Py_ssize_t len = PySequence_Fast_GET_SIZE(src);
@@ -351,7 +352,8 @@ PyPolyad_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return pack;
     }
 
-    return PyPolyad_FromSequence(src);
+    return PyPolyad_FromSequence(src,
+            "expected a sequence (encode) or bufferable (decode)");
 }
 
 /* PyPolyad buffer API */

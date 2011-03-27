@@ -43,7 +43,7 @@ PyAPI_FUNC(PyObject *) PyPolyid_FromBuffer(Py_buffer *view, size_t off);
 PyAPI_FUNC(int) PyPolyid_getbuffer(PyPolyid *self, Py_buffer *view,
         int flags);
 /* PyPolyid sequence API */
-PyAPI_FUNC(PyObject *) PyPolyid_FromSequence(PyObject *seq);
+PyAPI_FUNC(PyObject *) PyPolyid_FromSequence(PyObject *seq, const char *errmsg);
 PyAPI_FUNC(Py_ssize_t) PyPolyid_length(PyObject *self);
 PyAPI_FUNC(PyObject *) PyPolyid_item(PyObject *self, Py_ssize_t i);
 
@@ -61,7 +61,7 @@ PyAPI_FUNC(PyObject *) PyPolyad_tp_new(PyTypeObject *type, PyObject *args,
         PyObject *kwds);
 PyAPI_FUNC(PyObject *) PyPolyad_FromBuffer(Py_buffer *view, size_t off,
         size_t len);
-PyAPI_FUNC(PyObject *) PyPolyad_FromSequence(PyObject *seq);
+PyAPI_FUNC(PyObject *) PyPolyad_FromSequence(PyObject *seq, const char *errmsg);
 
 /* PyPolyad buffer API */
 PyAPI_FUNC(int) PyPolyad_getbuffer(PyPolyad *self, Py_buffer *view, int flags);
