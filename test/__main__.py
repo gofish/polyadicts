@@ -76,6 +76,8 @@ def test_polyid_from_sequence():
     for i in range(6):
         assert(a == p[i])
         a, b = b, a + b
+    p = pd.polyid(range(4))
+    assert(tuple(range(4)) == tuple(p))
 
 def test_polyid_from_other():
     assert_raises(TypeError, pd.polyid, None)
@@ -120,6 +122,9 @@ def test_polyad_from_sequence():
     assert('hello' == str(p[0], 'ascii'))
     assert('world' == str(p[1], 'ascii'))
     assert(b'\x05\x05helloworld' == bytes(p))
+    g = (bytes(x, 'ascii') for x in ('hello', 'world'))
+    p = pd.polyad(g)
+    assert(s == list(p))
 
 def test_polyad_from_other():
     assert_raises(TypeError, pd.polyad, None)
