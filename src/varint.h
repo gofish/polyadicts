@@ -38,17 +38,4 @@ vi_size_t vi_copy(const varint *, varint *);
 vi_size_t uint64_log2(uint64_t);
 #define uint64_vi_len(x) (uint64_log2(x) / 7 + 1)
 
-static inline vi_data_t vi_rv(const varint *vi, vi_size_t i)
-{
-    return ((vi_data_t *)vi)[i & (sizeof(varint) - 1)];
-}
-
-static inline varint* vi_step(varint *vi, uint64_t *x)
-{
-    vi_size_t n;
-    n = vi_to_uint64(vi,x);
-    if (!n) return 0;
-    return (varint *)((vi_data_t *)vi + n);
-}
-
 #endif /* _varint_h_DEFINED */
