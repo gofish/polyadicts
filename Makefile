@@ -15,7 +15,7 @@ tags:	src/*.h src/*.c
 build bdist bdist_egg:
 	$(PYTHON) $(SETUP) $(SETUPOPTS) $@
 
-test:
+test:   build
 	$(PYTHON) test/
 
 clean:

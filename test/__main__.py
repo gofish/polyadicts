@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
-import os
 import platform
 import sys
 
-def main(buildroot='build'):
-    if buildroot is not None:
-        dopath(buildroot)
+pd = None
+libpath = None
 
+def main(buildroot='build'):
     global pd, libpath
+    if buildroot is not None:
+        libpath = dopath(buildroot)
+
     try:
-        import polyadicts as pd
+        import polyadicts as _pd
     except ImportError:
-        raise
         raise SystemExit(
-                'fatal: polyadicts is missing!\n'
-                '\tbuildroot: %r\n'
-                '\tlibpath: %r\n' %
-                (buildroot, libpath))
+            'fatal: polyadicts is missing!\n'
+            '\tbuildroot: %r\n'
+            '\tlibpath: %r\n' %
+            (buildroot, libpath))
+    else:
+        pd = _pd
 
     test_polyid_from_bytes()
     test_polyid_from_sequence()
@@ -32,14 +35,14 @@ def main(buildroot='build'):
     test_polyad_enomem()
 
 def dopath(buildroot):
-    global libpath
-    lsystem = platform.system().lower()
-    machine = platform.machine()
-    version = '.'.join(platform.python_version_tuple()[:2])
-    libpath = '%(buildroot)s/lib.%(lsystem)s-%(machine)s-%(version)s'
-    libpath %= locals()
-    sys.path.append(libpath)
-
+    path = '%(buildroot)s/lib.%(lsystem)s-%(machine)s-%(version)s' % dict(
+        buildroot=buildroot,
+        lsystem=platform.system().lower(),
+        machine=platform.machine(),
+        version='.'.join(platform.python_version_tuple()[:2]),
+        )
+    sys.path.append(path)
+    
 def assert_raises(err, f, *args, **kwds):
     ret = None
     try:
