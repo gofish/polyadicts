@@ -7,7 +7,7 @@ CTAGS = ctags
 
 .PHONY: build test clean
 
-all:	tags build test
+all:	tags build test doc
 
 tags:	src/*.h src/*.c
 	$(CTAGS) -f $@ $?
@@ -22,4 +22,11 @@ clean:
 	$(PYTHON) $(SETUP) $(SETUPOPTS) clean --all
 
 distclean: clean
-	$(RM) -r dist/ *.egg-info/
+	$(RM) -r dist/ *.egg-info/ README.html
+
+doc:    README.html
+
+README.html: | style.css
+
+%.html: %.md
+	pandoc --standalone $(addprefix -c$(space),$(filter %.css,$|)) --from markdown --to html -o $@ $<
