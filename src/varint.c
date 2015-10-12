@@ -93,7 +93,10 @@ vi_copy(const varint *const src, varint *const dst)
     i = 0;
     for (;;) {
         if (!((*vi_lvp(dst,i) = vi_rv(src,i)) & 0x80)) break;
-        if (++i == sizeof(varint)) return 0;
+        if (++i == VI_MAX_LEN) {
+            errno = ERANGE;
+            return 0;
+        }
     }
     return i;
 }
@@ -109,7 +112,7 @@ vi_to_uint64(const varint *const v, size_t l, uint64_t *x)
             errno = EINVAL;
             return 0;
         }
-        if (i == sizeof(varint)) {
+        if (i == VI_MAX_LEN) {
             errno = ERANGE;
             return 0;
         }

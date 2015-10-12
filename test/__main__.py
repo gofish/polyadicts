@@ -103,9 +103,19 @@ def test_polyid_range():
 
 def test_polyid_erange():
     assert_raises(OverflowError, pd.polyid, [1 << 64])
-    assert_raises(OverflowError, pd.polyid, [1 << 56])
-    assert_raises(OverflowError, pd.polyid,
-            b'\x01\xff\xff\xff\xff\xff\xff\xff\xff\x01')
+    assert_raises(OverflowError, pd.polyid, b'\x01' + 9 * b'\xff' + b'\x01')
+
+    b = b'\x01' + 8 * b'\x80' + b'\x01'
+    p = pd.polyid(b)
+    assert(p[0] == (1 << 56))
+    p = pd.polyid([p[0]])
+    assert(b == bytes(p))
+
+    b = b'\x01' + 8 * b'\xff' + b'\x7f'
+    p = pd.polyid(b)
+    assert(p[0] == ((1 << 63) - 1))
+    p = pd.polyid([p[0]])
+    assert(b == bytes(p))
 
 def test_polyid_einval():
     assert_raises(ValueError, pd.polyid, b'\x01')

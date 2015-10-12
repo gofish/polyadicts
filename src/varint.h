@@ -25,7 +25,10 @@
 
 typedef uint64_t varint;
 
-static const uint64_t VI_MAX = (1LL << (7 * sizeof(varint))) - 1;
+/** We support up to 9 x 7-bit bytes **/
+static const uint64_t VI_MAX_LEN = 9;
+/** This provides for 63 bits of data **/
+static const uint64_t VI_MAX = (1ULL << 63) - 1LL;
 
 uint8_t vi_copy     (const varint *, varint *);
 uint8_t vi_to_uint64(const varint *, size_t, uint64_t *);
