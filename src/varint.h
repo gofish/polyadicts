@@ -23,16 +23,14 @@
 #include <stdint.h>
 #include <unistd.h>
 
-typedef uint64_t varint;
-
 /** We support up to 9 x 7-bit bytes **/
 static const uint64_t VI_MAX_LEN = 9;
 /** This provides for 63 bits of data **/
 static const uint64_t VI_MAX = (1ULL << 63) - 1LL;
 
-uint8_t vi_copy     (const varint *, varint *);
-uint8_t vi_to_uint64(const varint *, size_t, uint64_t *);
-uint8_t uint64_to_vi(uint64_t, varint *, size_t);
+uint8_t vi_copy     (const void *, void *);
+uint8_t vi_to_uint64(const void *, size_t, uint64_t *);
+uint8_t uint64_to_vi(uint64_t, void *, size_t);
 
 uint8_t uint64_log2 (uint64_t);
 

@@ -75,19 +75,19 @@ uint64_log2(const uint64_t x)
 }
 
 static inline uint8_t
-vi_rv(const varint *vi, uint8_t i)
+vi_rv(const void *vi, uint8_t i)
 {
     return ((uint8_t *)vi)[i];
 }
 
 static inline uint8_t *
-vi_lvp(varint *vi, uint8_t i)
+vi_lvp(void *vi, uint8_t i)
 {
     return &(((uint8_t *)vi)[i]);
 }
 
 uint8_t
-vi_copy(const varint *const src, varint *const dst)
+vi_copy(const void *const src, void *const dst)
 {
     uint8_t i;
     i = 0;
@@ -102,7 +102,7 @@ vi_copy(const varint *const src, varint *const dst)
 }
 
 uint8_t
-vi_to_uint64(const varint *const v, size_t l, uint64_t *x)
+vi_to_uint64(const void *const v, size_t l, uint64_t *x)
 {
     uint64_t y;
     uint8_t i;
@@ -124,7 +124,7 @@ vi_to_uint64(const varint *const v, size_t l, uint64_t *x)
 }
 
 uint8_t
-uint64_to_vi(uint64_t x, varint *const v, size_t l)
+uint64_to_vi(uint64_t x, void *const v, size_t l)
 {
     uint8_t s, i;
     if (x > VI_MAX) {
