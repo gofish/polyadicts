@@ -74,16 +74,16 @@ uint64_log2(const uint64_t x)
     return uint32_log2(x >> 32) + 32;
 }
 
-static inline vi_data_t
+static inline uint8_t
 vi_rv(const varint *vi, vi_size_t i)
 {
-    return ((vi_data_t *)vi)[i];
+    return ((uint8_t *)vi)[i];
 }
 
-static inline vi_data_t*
+static inline uint8_t *
 vi_lvp(varint *vi, vi_size_t i)
 {
-    return &(((vi_data_t *)vi)[i]);
+    return &(((uint8_t *)vi)[i]);
 }
 
 vi_size_t
@@ -98,7 +98,7 @@ vi_copy(const varint *const src, varint *const dst)
     return i;
 }
 
-inline vi_size_t
+vi_size_t
 vi_to_uint64(const varint *const v, uint64_t *x, size_t l)
 {
     uint64_t y;
