@@ -77,13 +77,13 @@ uint64_log2(const uint64_t x)
 static inline vi_data_t
 vi_rv(const varint *vi, vi_size_t i)
 {
-    return ((vi_data_t *)vi)[i & (sizeof(varint) - 1)];
+    return ((vi_data_t *)vi)[i];
 }
 
 static inline vi_data_t*
 vi_lvp(varint *vi, vi_size_t i)
 {
-    return ((vi_data_t *)vi) + (i & (sizeof(varint) - 1));
+    return &(((vi_data_t *)vi)[i]);
 }
 
 vi_size_t
@@ -98,30 +98,8 @@ vi_copy(const varint *const src, varint *const dst)
     return i;
 }
 
-static inline vi_size_t
-vi_to_uint64_unchecked(const varint *const v, uint64_t *x)
-{
-    uint64_t y;
-    vi_size_t i;
-    y = i = 0;
-    for (;;) {
-        if (i == sizeof(varint)) break;
-        y |= (vi_rv(v,i) & 0x7fLL) << (7 * i);
-        if (!(vi_rv(v,i++) & 0x80)) break;
-    }
-    *x = y;
-    return i;
-}
-
-vi_size_t
-vi_to_uint64(const varint *const v, uint64_t *const x)
-{
-    if (!v || !x) return 0;
-    return vi_to_uint64_unchecked(v,x);
-}
-
 inline vi_size_t
-vi_to_uint64_2(const varint *const v, uint64_t *x, size_t l)
+vi_to_uint64(const varint *const v, uint64_t *x, size_t l)
 {
     uint64_t y;
     vi_size_t i;

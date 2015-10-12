@@ -83,8 +83,8 @@ polyid_t* polyid_load(void *data, bool shared, size_t maxlen)
         pack->values = NULL;
 
         // read the number of stored values
-        vi_size = vi_to_uint64_2(data, &n, maxlen);
-        if (vi_size == 0) {
+        vi_size = vi_to_uint64(data, &n, maxlen);
+        if (!vi_size) {
             free(pack);
             return NULL;
         }
@@ -106,7 +106,7 @@ polyid_t* polyid_load(void *data, bool shared, size_t maxlen)
 
         // read values into table
         for (i = 0; i < pack->n && maxlen; i++) {
-            vi_size = vi_to_uint64_2(data, &pack->values[i], maxlen);
+            vi_size = vi_to_uint64(data, &pack->values[i], maxlen);
             if (vi_size) {
                 data += vi_size;
                 maxlen -= vi_size;
@@ -157,12 +157,14 @@ polyad_t* polyad_load(size_t size, void *data, bool shared)
         head = data;
         tail = data + size;
         while (head < tail) {
-            vi_size = vi_to_uint64(head, &item_size);
-            if (vi_size < 0)
+            vi_size = vi_to_uint64(head, &item_size, tail - head);
+            if (vi_size) {
+                head += vi_size;
+                tail -= item_size;
+                polyad->nitem++;
+            } else {
                 break;
-            head += vi_size;
-            tail -= item_size;
-            polyad->nitem++;
+            }
         }
 
         if (head == tail) {
@@ -172,8 +174,8 @@ polyad_t* polyad_load(size_t size, void *data, bool shared)
                 polyad_len_t i;
                 head = data;
                 for (i = 0; i < polyad->nitem; i++) {
-                    vi_size = vi_to_uint64(head, &item_size);
-                    assert(vi_size);
+                    vi_size = vi_to_uint64(head, &item_size, tail - head);
+                    assert(vi_size); // (tail - head) OK since already validated against overread above
                     polyad->item[i].size = item_size;
                     polyad->item[i].data = tail;
                     polyad->item[i].shared = true;
@@ -184,7 +186,7 @@ polyad_t* polyad_load(size_t size, void *data, bool shared)
                 free(polyad);
                 polyad = NULL;
             }
-        }else {
+        } else {
             free(polyad);
             polyad = NULL;
             errno = EINVAL;
