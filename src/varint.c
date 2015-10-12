@@ -120,27 +120,24 @@ vi_to_uint64(const varint *const v, uint64_t *x, size_t l)
     return i;
 }
 
-inline vi_size_t
-uint64_to_vi_unchecked(uint64_t x, varint *const v)
-{
-    vi_size_t i = 0;
-    for (;;) {
-        *vi_lvp(v,i) = x & 0x7f;
-        x >>= 7;
-        if (x) *vi_lvp(v,i++) |= 0x80;
-        else break;
-    }
-    //printf("%hhu\n", vi_rv(v,i));
-    return ++i;
-}
-
 vi_size_t
-uint64_to_vi(uint64_t x, varint *const v)
+uint64_to_vi(uint64_t x, varint *const v, size_t l)
 {
-    if (!v) return 0;
+    vi_size_t s, i;
     if (x > VI_MAX) {
         errno = ERANGE;
         return 0;
     }
-    return uint64_to_vi_unchecked(x,v);
+    s = uint64_log2(x) / 7 + 1;
+    if (s > l) {
+        errno = EINVAL;
+        return 0;
+    }
+    if (v) {
+        for (i = 0; i < s - 1; i++, x >>= 7) {
+            *vi_lvp(v,i) = (x & 0x7f) | 0x80;
+        }
+        *vi_lvp(v,i) = (x & 0x7f);
+    }
+    return s;
 }

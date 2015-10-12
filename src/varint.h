@@ -31,9 +31,8 @@ static const uint64_t VI_MAX = (1LL << (7 * sizeof(varint))) - 1;
 
 vi_size_t vi_copy       (const varint *, varint *);
 vi_size_t vi_to_uint64  (const varint *, uint64_t *, size_t);
-vi_size_t uint64_to_vi  (uint64_t, varint *);
-vi_size_t uint64_log2   (uint64_t);
+vi_size_t uint64_to_vi  (uint64_t, varint *, size_t);
 
-#define uint64_vi_len(x) (uint64_log2(x) / 7 + 1)
+vi_size_t uint64_log2   (uint64_t);
 
 #endif /* _varint_h_DEFINED */

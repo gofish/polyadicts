@@ -39,27 +39,27 @@ polyid_t* polyid_new(polyad_len_t n, uint64_t *values)
         pack->values = values; // take control of the values array
 
         // calculate resulting size
-        pack->size = uint64_vi_len(n);
+        pack->size = uint64_to_vi(n, NULL, -1);
         for (i = 0; i < n; i++)
-            pack->size += uint64_vi_len(values[i]);
+            pack->size += uint64_to_vi(values[i], NULL, -1);
 
         pack->data = malloc(pack->size);
         if (pack->data) {
             size_t off;
             vi_size_t vi_size;
 
-            off = vi_size = uint64_to_vi(n, pack->data);
+            off = vi_size = uint64_to_vi(n, pack->data, pack->size);
             if (vi_size) {
                 for (i = 0; i < n; i++) {
-                    vi_size = uint64_to_vi(values[i], pack->data + off);
+                    vi_size = uint64_to_vi(values[i], pack->data + off, pack->size - off);
                     if (vi_size)
                         off += vi_size;
                     else
                         break;
                 }
+                if (i == n)
+                    return pack;
             }
-            if (i == n)
-                return pack;
         }
         // failure
         free(pack);
@@ -269,7 +269,7 @@ int polyad_finish(polyad_t *polyad)
         /* size of item */
         polyad->self.size += polyad->item[i].size;
         /* size of varint to required to represent item size */
-        tmp = uint64_vi_len(polyad->item[i].size);
+        tmp = uint64_to_vi(polyad->item[i].size, NULL, -1);
         head_size += tmp;
         polyad->self.size += tmp;
     }
@@ -282,7 +282,7 @@ int polyad_finish(polyad_t *polyad)
         polyad->self.shared = false;
 
         for (i = 0; i < polyad->nitem; i++) {
-            head += uint64_to_vi(polyad->item[i].size, head);
+            head += uint64_to_vi(polyad->item[i].size, head, tail - head);
             /* copy item data to shared buffer */
             memcpy(tail, polyad->item[i].data, polyad->item[i].size);
             /* free old data */

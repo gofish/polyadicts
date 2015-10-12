@@ -112,7 +112,7 @@ PyPolyid_FromSequence(PyObject *src, const char *errmsg)
         else if (errno == ENOMEM)
             PyErr_SetFromErrno(PyExc_MemoryError);
         else
-            PyErr_SetFromErrno(PyExc_SystemError);
+            PyErr_SetFromErrno(PyExc_ValueError);
         free(values);
         return NULL;
     }
