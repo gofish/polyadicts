@@ -46,7 +46,7 @@ polyid_t* polyid_new(polyad_len_t n, uint64_t *values)
         pack->data = malloc(pack->size);
         if (pack->data) {
             size_t off;
-            vi_size_t vi_size;
+            uint8_t vi_size;
 
             off = vi_size = uint64_to_vi(n, pack->data, pack->size);
             if (vi_size) {
@@ -73,7 +73,7 @@ polyid_t* polyid_load(void *data, bool shared, size_t maxlen)
 
     pack = malloc(sizeof(polyid_t));
     if (pack) {
-        vi_size_t vi_size;
+        uint8_t vi_size;
         polyad_len_t i;
         uint64_t n;
 
@@ -143,7 +143,7 @@ polyad_t* polyad_load(size_t size, void *data, bool shared)
 
     polyad = malloc(sizeof(polyad_t));
     if (polyad) {
-        vi_size_t vi_size;
+        uint8_t vi_size;
         void *head, *tail;
         uint64_t item_size;
 

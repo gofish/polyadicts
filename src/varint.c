@@ -66,7 +66,7 @@ uint32_log2(const uint32_t x)
 #endif
 }
 
-inline vi_size_t
+inline uint8_t
 uint64_log2(const uint64_t x)
 {
     if (x < 0x100000000LL)
@@ -75,21 +75,21 @@ uint64_log2(const uint64_t x)
 }
 
 static inline uint8_t
-vi_rv(const varint *vi, vi_size_t i)
+vi_rv(const varint *vi, uint8_t i)
 {
     return ((uint8_t *)vi)[i];
 }
 
 static inline uint8_t *
-vi_lvp(varint *vi, vi_size_t i)
+vi_lvp(varint *vi, uint8_t i)
 {
     return &(((uint8_t *)vi)[i]);
 }
 
-vi_size_t
+uint8_t
 vi_copy(const varint *const src, varint *const dst)
 {
-    vi_size_t i;
+    uint8_t i;
     i = 0;
     for (;;) {
         if (!((*vi_lvp(dst,i) = vi_rv(src,i)) & 0x80)) break;
@@ -98,11 +98,11 @@ vi_copy(const varint *const src, varint *const dst)
     return i;
 }
 
-vi_size_t
+uint8_t
 vi_to_uint64(const varint *const v, uint64_t *x, size_t l)
 {
     uint64_t y;
-    vi_size_t i;
+    uint8_t i;
     y = i = 0;
     for (;;) {
         if (i == l) {
@@ -120,10 +120,10 @@ vi_to_uint64(const varint *const v, uint64_t *x, size_t l)
     return i;
 }
 
-vi_size_t
+uint8_t
 uint64_to_vi(uint64_t x, varint *const v, size_t l)
 {
-    vi_size_t s, i;
+    uint8_t s, i;
     if (x > VI_MAX) {
         errno = ERANGE;
         return 0;
