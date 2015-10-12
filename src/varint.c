@@ -99,7 +99,7 @@ vi_copy(const varint *const src, varint *const dst)
 }
 
 uint8_t
-vi_to_uint64(const varint *const v, uint64_t *x, size_t l)
+vi_to_uint64(const varint *const v, size_t l, uint64_t *x)
 {
     uint64_t y;
     uint8_t i;
