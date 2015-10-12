@@ -139,6 +139,8 @@ def test_polyad_from_other():
 
 def test_polyad_einval():
     assert_raises(ValueError, pd.polyad, b'\x05')
+    for i in range(100):
+        assert_raises(ValueError, pd.polyad, b'\xff' * 8)
 
 def test_polyad_enomem():
     from resource import getrlimit, getrusage, setrlimit
