@@ -3,14 +3,10 @@
 PYTHON = python3
 SETUP = setup.py
 SETUPOPTS ?= --quiet
-CTAGS = ctags
 
 .PHONY: build test clean
 
-all:	tags build test doc
-
-tags:	src/*.h src/*.c
-	$(CTAGS) -f $@ $?
+all:	build test doc
 
 build bdist bdist_egg:
 	$(PYTHON) $(SETUP) $(SETUPOPTS) $@
