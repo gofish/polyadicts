@@ -27,7 +27,7 @@ typedef uint64_t varint;
 typedef uint8_t vi_size_t;
 typedef uint8_t vi_data_t;
 
-static const uint64_t VI_MAX = (1ll << (7 * sizeof(varint))) - 1;
+static const uint64_t VI_MAX = (1LL << (7 * sizeof(varint))) - 1;
 
 vi_size_t vi_to_uint64  (const varint *, uint64_t *);
 vi_size_t vi_to_uint64_2(const varint *, uint64_t *, size_t);

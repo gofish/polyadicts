@@ -74,12 +74,13 @@ uint64_log2(const uint64_t x)
     return uint32_log2(x >> 32) + 32;
 }
 
-inline vi_data_t vi_rv(const varint *vi, vi_size_t i)
+static inline vi_data_t
+vi_rv(const varint *vi, vi_size_t i)
 {
     return ((vi_data_t *)vi)[i & (sizeof(varint) - 1)];
 }
 
-inline vi_data_t*
+static inline vi_data_t*
 vi_lvp(varint *vi, vi_size_t i)
 {
     return ((vi_data_t *)vi) + (i & (sizeof(varint) - 1));
@@ -97,7 +98,7 @@ vi_copy(const varint *const src, varint *const dst)
     return i;
 }
 
-inline vi_size_t
+static inline vi_size_t
 vi_to_uint64_unchecked(const varint *const v, uint64_t *x)
 {
     uint64_t y;
@@ -105,7 +106,7 @@ vi_to_uint64_unchecked(const varint *const v, uint64_t *x)
     y = i = 0;
     for (;;) {
         if (i == sizeof(varint)) break;
-        y |= (vi_rv(v,i) & 0x7fll) << (7 * i);
+        y |= (vi_rv(v,i) & 0x7fLL) << (7 * i);
         if (!(vi_rv(v,i++) & 0x80)) break;
     }
     *x = y;
@@ -134,7 +135,7 @@ vi_to_uint64_2(const varint *const v, uint64_t *x, size_t l)
             errno = ERANGE;
             return 0;
         }
-        y |= (vi_rv(v,i) & 0x7fll) << (7 * i);
+        y |= (vi_rv(v,i) & 0x7fLL) << (7 * i);
         if (!(vi_rv(v,i++) & 0x80)) break;
     }
     *x = y;
