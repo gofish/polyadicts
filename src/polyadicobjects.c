@@ -77,7 +77,7 @@ PyPolyid_FromSequence(PyObject *src, const char *errmsg)
         return NULL;
 
     /* don't use PyMem_Malloc, since passing values off to polyid code */
-    polyad_len_t n = PySequence_Fast_GET_SIZE(src);
+    uint32_t n = PySequence_Fast_GET_SIZE(src);
     uint64_t *values = malloc(n * sizeof(uint64_t));
     if (!values) {
         PyErr_SetFromErrno(PyExc_MemoryError);
@@ -86,7 +86,7 @@ PyPolyid_FromSequence(PyObject *src, const char *errmsg)
     }
 
     /* convert to 64-bit unsigned ints */
-    polyad_len_t i;
+    uint32_t i;
     for (i = 0; i < n; i++) {
         PyObject *obj = PySequence_Fast_GET_ITEM(src, i);
         if (!PyLong_Check(obj)) break;
@@ -104,7 +104,7 @@ PyPolyid_FromSequence(PyObject *src, const char *errmsg)
         return NULL;
     }
 
-    polyid_t *pack;
+    struct polyid *pack;
     pack = polyid_new(n, values);
     if (!pack) {
         if (errno == ERANGE)
@@ -298,7 +298,7 @@ PyPolyad_FromSequence(PyObject *src, const char *errmsg)
         return NULL;
 
     Py_ssize_t len = PySequence_Fast_GET_SIZE(src);
-    polyad_t *pack;
+    struct polyad *pack;
     pack = polyad_prepare(len);
     if (!pack) {
         PyErr_SetFromErrno(PyExc_MemoryError);

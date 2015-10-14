@@ -26,11 +26,11 @@
 #include "polyadics.h"
 #include "varint.h"
 
-polyid_t* polyid_new(uint32_t n, uint64_t *values)
+struct polyid* polyid_new(uint32_t n, uint64_t *values)
 {
-    polyid_t *pack;
+    struct polyid *pack;
 
-    pack = malloc(sizeof(polyid_t));
+    pack = malloc(sizeof(struct polyid));
     if (pack) {
         uint32_t i;
 
@@ -67,11 +67,11 @@ polyid_t* polyid_new(uint32_t n, uint64_t *values)
     return NULL;
 }
 
-polyid_t* polyid_load(void *data, bool shared, size_t maxlen)
+struct polyid* polyid_load(void *data, bool shared, size_t maxlen)
 {
-    polyid_t *pack;
+    struct polyid *pack;
 
-    pack = malloc(sizeof(polyid_t));
+    pack = malloc(sizeof(struct polyid));
     if (pack) {
         uint8_t vi_size;
         uint32_t i;
@@ -127,7 +127,7 @@ polyid_t* polyid_load(void *data, bool shared, size_t maxlen)
     return pack;
 }
 
-void polyid_free(polyid_t *pack)
+void polyid_free(struct polyid *pack)
 {
     assert(pack);
 
@@ -137,11 +137,11 @@ void polyid_free(polyid_t *pack)
     free(pack);
 }
 
-polyad_t* polyad_load(size_t size, void *data, bool shared)
+struct polyad* polyad_load(size_t size, void *data, bool shared)
 {
-    polyad_t *polyad;
+    struct polyad *polyad;
 
-    polyad = malloc(sizeof(polyad_t));
+    polyad = malloc(sizeof(struct polyad));
     if (polyad) {
         uint8_t vi_size;
         void *head, *tail;
@@ -169,7 +169,7 @@ polyad_t* polyad_load(size_t size, void *data, bool shared)
 
         if (head == tail) {
             /* allocate item array and scan header again for item offsets */
-            polyad->item = malloc(polyad->nitem * sizeof(polyad_info_t));
+            polyad->item = malloc(polyad->nitem * sizeof(struct polyad_info));
             if (polyad->item) {
                 uint32_t i;
                 head = data;
@@ -195,7 +195,7 @@ polyad_t* polyad_load(size_t size, void *data, bool shared)
     return polyad;
 }
 
-void polyad_free(polyad_t *polyad)
+void polyad_free(struct polyad *polyad)
 {
     assert(polyad);
 
@@ -210,16 +210,16 @@ void polyad_free(polyad_t *polyad)
     free(polyad);
 }
 
-polyad_t* polyad_prepare(uint32_t nitem)
+struct polyad* polyad_prepare(uint32_t nitem)
 {
-    polyad_t *polyad;
+    struct polyad *polyad;
 
-    polyad = malloc(sizeof(polyad_t));
+    polyad = malloc(sizeof(struct polyad));
     if (polyad) {
         polyad->self.size = 0;
         polyad->self.data = NULL;
         polyad->self.shared = true;
-        polyad->item = malloc(nitem * sizeof(polyad_info_t));
+        polyad->item = malloc(nitem * sizeof(struct polyad_info));
         if (polyad->item) {
             uint32_t i;
             for (i = 0; i < nitem; i++) {
@@ -236,7 +236,7 @@ polyad_t* polyad_prepare(uint32_t nitem)
     return polyad;
 }
 
-int polyad_set(polyad_t *polyad, uint32_t i, size_t size, void *data, bool shared)
+int polyad_set(struct polyad *polyad, uint32_t i, size_t size, void *data, bool shared)
 {
     assert(polyad);
 
@@ -255,7 +255,7 @@ int polyad_set(polyad_t *polyad, uint32_t i, size_t size, void *data, bool share
     return retval;
 }
 
-int polyad_finish(polyad_t *polyad)
+int polyad_finish(struct polyad *polyad)
 {
     assert(polyad);
 

@@ -28,7 +28,7 @@
  * polyid - an n-tuple of varint-packed unsigned integers
  */
 
-typedef struct polyid_st
+struct polyid
 {
     // tuple-length 'n' and decoded unsigned 64-bit integers
     uint32_t n;
@@ -38,17 +38,17 @@ typedef struct polyid_st
     void *data;
     // do we own the buffer
     bool shared;
-} polyid_t;
+};
 
-polyid_t* polyid_new(uint32_t n, uint64_t *values);
-polyid_t* polyid_load(void *data, bool shared, size_t maxlen);
-void polyid_free(polyid_t *pack);
+struct polyid* polyid_new(uint32_t n, uint64_t *values);
+struct polyid* polyid_load(void *data, bool shared, size_t maxlen);
+void polyid_free(struct polyid *pack);
 
 /**
  * polyad - an n-tuple of binary data segments with a polyid header
  */
 
-typedef struct polyad_info_st
+struct polyad_info
 {
     // length of data pointed to by void* data
     size_t size;
@@ -56,30 +56,30 @@ typedef struct polyad_info_st
     void* data;
     // do we own the memory, or is it shared?
     bool shared;
-} polyad_info_t;
+};
 
-typedef struct polyad_st
+struct polyad
 {
     // total polyad length and data pointer
-    polyad_info_t self;
+    struct polyad_info self;
     // number and array of stored items
     uint32_t nitem;
-    polyad_info_t *item;
-} polyad_t;
+    struct polyad_info *item;
+};
 
 /* read a polyad structure from a suppplied data pointer */
-polyad_t* polyad_load(size_t size, void *data, bool shared);
+struct polyad* polyad_load(size_t size, void *data, bool shared);
 /* free any non-shared memory associated with a polyad */
-void polyad_free(polyad_t *polyad);
+void polyad_free(struct polyad *polyad);
 
 /**
  * The following three functions should be used in consecutive order only
  **/
 /* initialize a new polyad object prepared to store n entries */
-polyad_t* polyad_prepare(uint32_t nitem);
+struct polyad* polyad_prepare(uint32_t nitem);
 /* set the i'th item in a polyad to the given data */
-int polyad_set(polyad_t *polyad, uint32_t i, size_t size, void *data, bool shared);
+int polyad_set(struct polyad *polyad, uint32_t i, size_t size, void *data, bool shared);
 /* allocate a single memory buffer and store the packed items */
-int polyad_finish(polyad_t *polyad);
+int polyad_finish(struct polyad *polyad);
 
 #endif

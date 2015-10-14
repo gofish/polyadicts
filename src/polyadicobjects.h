@@ -28,7 +28,7 @@ typedef struct PyPolyid_st
 {
     PyObject_HEAD
     /* underlying C polyid object */
-    polyid_t *pack;
+    struct polyid *pack;
     /* references to parent buffer object, if used */
     Py_buffer *src;
 } PyPolyid;
@@ -51,7 +51,7 @@ typedef struct PyPolyad_st
 {
     PyObject_HEAD
     /* underlying C polyad object */
-    polyad_t *pack;
+    struct polyad *pack;
     /* references to parent buffer object, if used */
     Py_buffer *src;
 } PyPolyad;
