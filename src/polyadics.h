@@ -24,8 +24,6 @@
 #include <sys/types.h>
 #include "varint.h"
 
-typedef unsigned int polyad_len_t;
-
 /**
  * polyid - an n-tuple of varint-packed unsigned integers
  */
@@ -33,7 +31,7 @@ typedef unsigned int polyad_len_t;
 typedef struct polyid_st
 {
     // tuple-length 'n' and decoded unsigned 64-bit integers
-    polyad_len_t n;
+    uint32_t n;
     uint64_t *values;
     // data length and backing buffer
     size_t size;
@@ -42,7 +40,7 @@ typedef struct polyid_st
     bool shared;
 } polyid_t;
 
-polyid_t* polyid_new(polyad_len_t n, uint64_t *values);
+polyid_t* polyid_new(uint32_t n, uint64_t *values);
 polyid_t* polyid_load(void *data, bool shared, size_t maxlen);
 void polyid_free(polyid_t *pack);
 
@@ -65,7 +63,7 @@ typedef struct polyad_st
     // total polyad length and data pointer
     polyad_info_t self;
     // number and array of stored items
-    polyad_len_t nitem;
+    uint32_t nitem;
     polyad_info_t *item;
 } polyad_t;
 
@@ -78,9 +76,9 @@ void polyad_free(polyad_t *polyad);
  * The following three functions should be used in consecutive order only
  **/
 /* initialize a new polyad object prepared to store n entries */
-polyad_t* polyad_prepare(polyad_len_t nitem);
+polyad_t* polyad_prepare(uint32_t nitem);
 /* set the i'th item in a polyad to the given data */
-int polyad_set(polyad_t *polyad, polyad_len_t i, size_t size, void *data, bool shared);
+int polyad_set(polyad_t *polyad, uint32_t i, size_t size, void *data, bool shared);
 /* allocate a single memory buffer and store the packed items */
 int polyad_finish(polyad_t *polyad);
 

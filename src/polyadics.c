@@ -26,13 +26,13 @@
 #include "polyadics.h"
 #include "varint.h"
 
-polyid_t* polyid_new(polyad_len_t n, uint64_t *values)
+polyid_t* polyid_new(uint32_t n, uint64_t *values)
 {
     polyid_t *pack;
 
     pack = malloc(sizeof(polyid_t));
     if (pack) {
-        polyad_len_t i;
+        uint32_t i;
 
         pack->n = n;
         pack->shared = false;
@@ -74,7 +74,7 @@ polyid_t* polyid_load(void *data, bool shared, size_t maxlen)
     pack = malloc(sizeof(polyid_t));
     if (pack) {
         uint8_t vi_size;
-        polyad_len_t i;
+        uint32_t i;
         uint64_t n;
 
         pack->size = 0;
@@ -171,7 +171,7 @@ polyad_t* polyad_load(size_t size, void *data, bool shared)
             /* allocate item array and scan header again for item offsets */
             polyad->item = malloc(polyad->nitem * sizeof(polyad_info_t));
             if (polyad->item) {
-                polyad_len_t i;
+                uint32_t i;
                 head = data;
                 for (i = 0; i < polyad->nitem; i++) {
                     vi_size = vi_to_uint64(head, tail - head, &item_size);
@@ -199,7 +199,7 @@ void polyad_free(polyad_t *polyad)
 {
     assert(polyad);
 
-    polyad_len_t i;
+    uint32_t i;
     for (i = 0; i < polyad->nitem; i++) {
         if (!polyad->item[i].shared)
             free(polyad->item[i].data);
@@ -210,7 +210,7 @@ void polyad_free(polyad_t *polyad)
     free(polyad);
 }
 
-polyad_t* polyad_prepare(polyad_len_t nitem)
+polyad_t* polyad_prepare(uint32_t nitem)
 {
     polyad_t *polyad;
 
@@ -221,7 +221,7 @@ polyad_t* polyad_prepare(polyad_len_t nitem)
         polyad->self.shared = true;
         polyad->item = malloc(nitem * sizeof(polyad_info_t));
         if (polyad->item) {
-            polyad_len_t i;
+            uint32_t i;
             for (i = 0; i < nitem; i++) {
                 polyad->item[i].size = 0;
                 polyad->item[i].data = NULL;
@@ -236,7 +236,7 @@ polyad_t* polyad_prepare(polyad_len_t nitem)
     return polyad;
 }
 
-int polyad_set(polyad_t *polyad, polyad_len_t i, size_t size, void *data, bool shared)
+int polyad_set(polyad_t *polyad, uint32_t i, size_t size, void *data, bool shared)
 {
     assert(polyad);
 
@@ -260,7 +260,7 @@ int polyad_finish(polyad_t *polyad)
     assert(polyad);
 
     int retval;
-    polyad_len_t i;
+    uint32_t i;
     size_t head_size, tmp;
     /* count header size and total required buffer size */
     head_size = 0;
