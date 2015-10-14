@@ -26,7 +26,7 @@
 #include "polyadics.h"
 #include "varint.h"
 
-struct polyid* polyid_new(uint32_t n, uint64_t *values)
+struct polyid* polyid_new(uint64_t *values, uint32_t count)
 {
     struct polyid *pack;
 
@@ -34,13 +34,13 @@ struct polyid* polyid_new(uint32_t n, uint64_t *values)
     if (pack) {
         uint32_t i;
 
-        pack->n = n;
+        pack->count = count;
         pack->shared = false;
         pack->values = values; // take control of the values array
 
         // calculate resulting size
-        pack->size = uint64_to_vi(n, NULL, -1);
-        for (i = 0; i < n; i++)
+        pack->size = uint64_to_vi(count, NULL, -1);
+        for (i = 0; i < count; i++)
             pack->size += uint64_to_vi(values[i], NULL, -1);
 
         pack->data = malloc(pack->size);
@@ -48,16 +48,16 @@ struct polyid* polyid_new(uint32_t n, uint64_t *values)
             size_t off;
             uint8_t vi_size;
 
-            off = vi_size = uint64_to_vi(n, pack->data, pack->size);
+            off = vi_size = uint64_to_vi(count, pack->data, pack->size);
             if (vi_size) {
-                for (i = 0; i < n; i++) {
+                for (i = 0; i < count; i++) {
                     vi_size = uint64_to_vi(values[i], pack->data + off, pack->size - off);
                     if (vi_size)
                         off += vi_size;
                     else
                         break;
                 }
-                if (i == n)
+                if (i == count)
                     return pack;
             }
         }
@@ -89,23 +89,23 @@ struct polyid* polyid_load(void *data, bool shared, size_t maxlen)
             return NULL;
         }
         maxlen -= vi_size;
-        if (!maxlen) {
+        if (!maxlen || n > UINT32_MAX) {
             errno = EINVAL;
             free(pack);
             return NULL;
         }
 
         // allocate a lookup table
-        pack->n = n;
+        pack->count = n;
         data += vi_size;
-        pack->values = malloc(pack->n * sizeof(uint64_t));
+        pack->values = malloc(pack->count * sizeof(uint64_t));
         if (!pack->values) {
             free(pack);
             return NULL;
         }
 
         // read values into table
-        for (i = 0; i < pack->n && maxlen; i++) {
+        for (i = 0; i < pack->count && maxlen; i++) {
             vi_size = vi_to_uint64(data, maxlen, &pack->values[i]);
             if (vi_size) {
                 data += vi_size;
@@ -115,7 +115,7 @@ struct polyid* polyid_load(void *data, bool shared, size_t maxlen)
             }
         }
 
-        if (i != pack->n) {
+        if (i != pack->count) {
             free(pack->values);
             free(pack);
             return NULL;

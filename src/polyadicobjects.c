@@ -77,8 +77,8 @@ PyPolyid_FromSequence(PyObject *src, const char *errmsg)
         return NULL;
 
     /* don't use PyMem_Malloc, since passing values off to polyid code */
-    uint32_t n = PySequence_Fast_GET_SIZE(src);
-    uint64_t *values = malloc(n * sizeof(uint64_t));
+    uint32_t count = PySequence_Fast_GET_SIZE(src);
+    uint64_t *values = malloc(count * sizeof(uint64_t));
     if (!values) {
         PyErr_SetFromErrno(PyExc_MemoryError);
         Py_DECREF(src);
@@ -87,7 +87,7 @@ PyPolyid_FromSequence(PyObject *src, const char *errmsg)
 
     /* convert to 64-bit unsigned ints */
     uint32_t i;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < count; i++) {
         PyObject *obj = PySequence_Fast_GET_ITEM(src, i);
         if (!PyLong_Check(obj)) break;
         values[i] = PyLong_AsUnsignedLongLong(obj);
@@ -95,7 +95,7 @@ PyPolyid_FromSequence(PyObject *src, const char *errmsg)
         if (PyErr_Occurred()) break;
     }
     Py_DECREF(src);
-    if (i != n) {
+    if (i != count) {
         if (!PyErr_Occurred()) {
             PyErr_SetString(PyExc_TypeError,
                     "polyid sequence must be numbers");
@@ -105,7 +105,7 @@ PyPolyid_FromSequence(PyObject *src, const char *errmsg)
     }
 
     struct polyid *pack;
-    pack = polyid_new(n, values);
+    pack = polyid_new(values, count);
     if (!pack) {
         if (errno == ERANGE)
             PyErr_SetFromErrno(PyExc_OverflowError);
@@ -165,14 +165,14 @@ PyBufferProcs PyPolyid_as_buffer = {
 Py_ssize_t
 PyPolyid_length(PyObject *self)
 {
-    return ((PyPolyid*)self)->pack->n;
+    return ((PyPolyid*)self)->pack->count;
 }
 
 PyObject*
 PyPolyid_item(PyObject *obj_self, Py_ssize_t i)
 {
     PyPolyid *self = (PyPolyid*) obj_self;
-    if (i >= self->pack->n) {
+    if (i >= self->pack->count) {
         PyErr_SetString(PyExc_IndexError, "pack index out of range");
         return NULL;
     }

@@ -30,8 +30,8 @@
 
 struct polyid
 {
-    // tuple-length 'n' and decoded unsigned 64-bit integers
-    uint32_t n;
+    // tuple-length and decoded unsigned 64-bit integers
+    uint32_t count;
     uint64_t *values;
     // data length and backing buffer
     size_t size;
@@ -40,7 +40,7 @@ struct polyid
     bool shared;
 };
 
-struct polyid* polyid_new(uint32_t n, uint64_t *values);
+struct polyid* polyid_new(uint64_t *values, uint32_t count);
 struct polyid* polyid_load(void *data, bool shared, size_t maxlen);
 void polyid_free(struct polyid *pack);
 
