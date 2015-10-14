@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "polyadics.h"
+#include "polyad.h"
 #include "varint.h"
 
 struct polyid* polyid_new(uint64_t *values, uint32_t count)

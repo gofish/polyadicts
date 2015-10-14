@@ -410,7 +410,7 @@ PySequenceMethods PyPolyad_as_sequence = {
 /* PyPolyad type definition */
 PyTypeObject PyPolyad_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "polyadicts.polyadic",             /*tp_name*/
+    "polyadicts.polyad",             /*tp_name*/
     sizeof(PyPolyad),         /*tp_basicsize*/
     0,                          /*tp_itemsize*/
     (destructor)PyPolyad_dealloc, /*tp_dealloc*/

@@ -22,7 +22,7 @@
 
 #include <Python.h>
 #include "varint.h"
-#include "polyadics.h"
+#include "polyad.h"
 
 typedef struct PyPolyid_st
 {
