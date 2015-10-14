@@ -45,6 +45,7 @@ capi = Extension(
     ['src/polyadictsmodule.c',
      'src/polyadicobjects.c',
      'src/polyad.c',
+     'src/ntuple.c',
      'src/varint.c',
      ],
 )
