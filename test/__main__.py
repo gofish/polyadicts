@@ -21,12 +21,12 @@ def main(buildroot='build'):
     else:
         pd = _pd
 
-    test_polyid_from_bytes()
-    test_polyid_from_sequence()
-    test_polyid_from_other()
-    test_polyid_range()
-    test_polyid_erange()
-    test_polyid_einval()
+    test_ntuple_from_bytes()
+    test_ntuple_from_sequence()
+    test_ntuple_from_other()
+    test_ntuple_range()
+    test_ntuple_erange()
+    test_ntuple_einval()
 
     test_polyad_from_bytes()
     test_polyad_from_sequence()
@@ -57,69 +57,64 @@ def assert_raises(err, f, *args, **kwds):
             raise AssertionError("did not raise %r" % err)
     return ret
 
-def test_polyid_from_bytes():
+def test_ntuple_from_bytes():
     b = b'\x01\x00'
-    p = pd.polyid(b)
-    assert(b == bytes(p))
-    assert(1 == len(p))
-    assert(0 == p[0])
+    t = pd.ntuple(b)
+    t = pd.ntuple(b)
+    assert(b == pd.ntuple(t))
+    assert(1 == len(t))
+    assert(0 == t[0])
     b = b'\x04\x00\x01\x02\x03'
-    p = pd.polyid(b)
-    assert(b == bytes(p))
-    assert(4 == len(p))
+    t = pd.ntuple(b)
+    assert(b == pd.ntuple(t))
+    assert(4 == len(t))
     for i in range(4):
-        assert(i == p[i])
+        assert(i == t[i])
 
-def test_polyid_from_sequence():
-    p = pd.polyid([42])
-    assert(1 == len(p))
-    assert(42 == p[0])
-    p = pd.polyid([1,1,2,3,5,8])
-    assert(6 == len(p))
-    a, b = 1, 1
-    for i in range(6):
-        assert(a == p[i])
-        a, b = b, a + b
-    p = pd.polyid(range(4))
-    assert(tuple(range(4)) == tuple(p))
+def test_ntuple_from_sequence():
+    b = pd.ntuple([42])
+    assert(2 == len(b))
+    assert(1 == b[0])
+    assert(42 == b[1])
+    b = pd.ntuple([1,1,2,3,5,8])
+    assert(7 == len(b))
+    assert(b'\x06\x01\x01\x02\x03\x05\x08' == b)
+    b = pd.ntuple(range(4))
+    assert(tuple(range(4)) == pd.ntuple(b))
 
-def test_polyid_from_other():
-    assert_raises(TypeError, pd.polyid, None)
-    assert_raises(TypeError, pd.polyid, 1)
-    assert_raises(TypeError, pd.polyid, 'foo')
-    assert_raises(TypeError, pd.polyid, ['hello', 'world'])
+def test_ntuple_from_other():
+    assert_raises(TypeError, pd.ntuple, None)
+    assert_raises(TypeError, pd.ntuple, 'foo')
+    assert_raises(TypeError, pd.ntuple, ['hello', 'world'])
 
-def test_polyid_range():
+def test_ntuple_range():
     n = (1 << 56) - 1
-    b = b'\x01\xff\xff\xff\xff\xff\xff\xff\x7f'
-    p = pd.polyid([n])
-    assert(1 == len(p))
-    assert(n == p[0])
-    assert(b == bytes(p))
-    p = pd.polyid(b)
-    assert(1 == len(p))
-    assert(n == p[0])
-    assert(b == bytes(p))
+    b = pd.ntuple([n])
+    assert(b'\x01' + b'\xff' * 7 + b'\x7f' == b)
+    t = pd.ntuple(b)
+    assert(1 == len(t))
+    assert(n == t[0])
+    assert(b == pd.ntuple(t))
 
-def test_polyid_erange():
-    assert_raises(OverflowError, pd.polyid, [1 << 64])
-    assert_raises(OverflowError, pd.polyid, b'\x01' + 9 * b'\xff' + b'\x01')
+def test_ntuple_erange():
+    assert_raises(OverflowError, pd.ntuple, [1 << 64])
+    assert_raises(OverflowError, pd.ntuple, b'\x01' + 9 * b'\xff' + b'\x01')
 
     b = b'\x01' + 8 * b'\x80' + b'\x01'
-    p = pd.polyid(b)
-    assert(p[0] == (1 << 56))
-    p = pd.polyid([p[0]])
-    assert(b == bytes(p))
+    t = pd.ntuple(b)
+    assert(t[0] == (1 << 56))
+    t = pd.ntuple([t[0]])
+    assert(b == bytes(t))
 
     b = b'\x01' + 8 * b'\xff' + b'\x7f'
-    p = pd.polyid(b)
-    assert(p[0] == ((1 << 63) - 1))
-    p = pd.polyid([p[0]])
-    assert(b == bytes(p))
+    t = pd.ntuple(b)
+    assert(t[0] == ((1 << 63) - 1))
+    t = pd.ntuple([t[0]])
+    assert(b == bytes(t))
 
-def test_polyid_einval():
-    assert_raises(ValueError, pd.polyid, b'\x01')
-    assert_raises(ValueError, pd.polyid, b'\x01\xff')
+def test_ntuple_einval():
+    assert_raises(ValueError, pd.ntuple, b'\x01')
+    assert_raises(ValueError, pd.ntuple, b'\x01\xff')
 
 def test_polyad_from_bytes():
     b = b'\x05\x05helloworld'
