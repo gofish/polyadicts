@@ -151,8 +151,7 @@ static struct PyModuleDef polyadicts_module = {
 PyMODINIT_FUNC PyInit_polyadicts (void)
 {
     // Initialize the type objects
-    if (PyType_Ready(&PyPolyad_Type) < 0 ||
-            PyType_Ready(&PyPolyid_Type) < 0)
+    if (PyType_Ready(&PyPolyad_Type) < 0)
         return NULL;
 
     // Initialize module
@@ -161,8 +160,6 @@ PyMODINIT_FUNC PyInit_polyadicts (void)
         // Add type object references to the module
         Py_INCREF(&PyPolyad_Type);
         PyModule_AddObject(module, "polyad", (PyObject*)&PyPolyad_Type);
-        Py_INCREF(&PyPolyid_Type);
-        PyModule_AddObject(module, "polyid", (PyObject*)&PyPolyid_Type);
     }
     return module;
 }

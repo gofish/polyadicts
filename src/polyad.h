@@ -25,26 +25,6 @@
 #include "varint.h"
 
 /**
- * polyid - an n-tuple of varint-packed unsigned integers
- */
-
-struct polyid
-{
-    // tuple-length and decoded unsigned 64-bit integers
-    uint32_t count;
-    uint64_t *values;
-    // data length and backing buffer
-    size_t size;
-    void *data;
-    // do we own the buffer
-    bool shared;
-};
-
-struct polyid* polyid_new(uint64_t *values, uint32_t count);
-struct polyid* polyid_load(void *data, bool shared, size_t maxlen);
-void polyid_free(struct polyid *pack);
-
-/**
  * polyad - an n-tuple of binary data segments with a polyid header
  */
 
