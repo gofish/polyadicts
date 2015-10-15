@@ -26,6 +26,25 @@
 #include "polyad.h"
 #include "varint.h"
 
+struct polyad_info
+{
+    // length of data pointed to by void* data
+    size_t size;
+    // memory region for data;
+    void* data;
+    // do we own the memory, or is it shared?
+    bool shared;
+};
+
+struct polyad
+{
+    // total polyad length and data pointer
+    struct polyad_info self;
+    // number and array of stored items
+    uint32_t nitem;
+    struct polyad_info *item;
+};
+
 struct polyad* polyad_load(size_t size, void *data, bool shared)
 {
     struct polyad *polyad;
@@ -97,6 +116,24 @@ void polyad_free(struct polyad *polyad)
         free(polyad->self.data);
     free(polyad->item);
     free(polyad);
+}
+
+size_t
+polyad_rank(struct polyad *p)
+{
+    return p->nitem;
+}
+
+struct iovec
+polyad_data(struct polyad *p)
+{
+    return (struct iovec) {.iov_base = p->self.data, .iov_len = p->self.size};
+}
+
+struct iovec
+polyad_item(struct polyad *p, size_t i)
+{
+    return (struct iovec) {.iov_base = p->item[i].data, .iov_len = p->item[i].size};
 }
 
 struct polyad* polyad_prepare(uint32_t nitem)

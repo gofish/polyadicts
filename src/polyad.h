@@ -22,35 +22,24 @@
 
 #include <stdbool.h>
 #include <sys/types.h>
+#include <sys/uio.h>
 #include "varint.h"
 
 /**
  * polyad - an n-tuple of binary data segments with a polyid header
  */
 
-struct polyad_info
-{
-    // length of data pointed to by void* data
-    size_t size;
-    // memory region for data;
-    void* data;
-    // do we own the memory, or is it shared?
-    bool shared;
-};
-
-struct polyad
-{
-    // total polyad length and data pointer
-    struct polyad_info self;
-    // number and array of stored items
-    uint32_t nitem;
-    struct polyad_info *item;
-};
+struct polyad;
 
 /* read a polyad structure from a suppplied data pointer */
-struct polyad* polyad_load(size_t size, void *data, bool shared);
+struct polyad * polyad_load(size_t size, void *data, bool shared);
+
 /* free any non-shared memory associated with a polyad */
 void polyad_free(struct polyad *polyad);
+
+size_t       polyad_rank(struct polyad *p);
+struct iovec polyad_data(struct polyad *p);
+struct iovec polyad_item(struct polyad *p, size_t i);
 
 /**
  * The following three functions should be used in consecutive order only

@@ -147,8 +147,9 @@ PyPolyad_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 int
 PyPolyad_getbuffer(PyPolyad *self, Py_buffer *view, int flags)
 {
-    return PyBuffer_FillInfo(view, (PyObject*)self, self->pack->self.data,
-            self->pack->self.size, true, PyBUF_SIMPLE);
+    const struct iovec data = polyad_data(self->pack);
+    return PyBuffer_FillInfo(view, (PyObject*)self, data.iov_base,
+            data.iov_len, true, PyBUF_SIMPLE);
 }
 
 PyBufferProcs PyPolyad_as_buffer = {
@@ -160,22 +161,23 @@ PyBufferProcs PyPolyad_as_buffer = {
 Py_ssize_t
 PyPolyad_length(PyObject *self)
 {
-    return ((PyPolyad*)self)->pack->nitem;
+    return polyad_rank(((PyPolyad*)self)->pack);
 }
 
 PyObject*
 PyPolyad_item(PyObject *obj_self, Py_ssize_t i)
 {
     PyPolyad *self = (PyPolyad*) obj_self;
-    if (i >= self->pack->nitem) {
+    if (i >= polyad_rank(self->pack)) {
         PyErr_SetString(PyExc_IndexError, "pack index out of range");
         return NULL;
     }
 
     Py_buffer view;
     if (0 == PyObject_GetBuffer(obj_self, &view, PyBUF_SIMPLE)) {
-        view.buf = self->pack->item[i].data;
-        view.len = self->pack->item[i].size;
+        const struct iovec data = polyad_item(self->pack, i);
+        view.buf = data.iov_base;
+        view.len = data.iov_len;
         return PyMemoryView_FromBuffer(&view);
     }
     return NULL;
