@@ -26,8 +26,8 @@
 void
 PyPolyad_dealloc(PyPolyad* self)
 {
-    if (self->pack)
-        polyad_free(self->pack);
+    if (self->polyad)
+        polyad_free(self->polyad);
     if (self->src) {
         PyBuffer_Release(self->src);
         PyMem_Del(self->src);
@@ -35,18 +35,38 @@ PyPolyad_dealloc(PyPolyad* self)
     self->ob_base.ob_type->tp_free((PyObject*)self);
 }
 
+void
+PyPolyad_SetErrFromErrno()
+{
+    switch (errno) {
+      case ENOMEM:
+        PyErr_SetFromErrno(PyExc_MemoryError);
+        break;
+      case ERANGE:
+        PyErr_SetFromErrno(PyExc_OverflowError);
+        break;
+      case EINVAL:
+        PyErr_SetFromErrno(PyExc_ValueError);
+        break;
+      default:
+        PyErr_SetString(PyExc_RuntimeError, "An unknown error has occurred");
+        break;
+    }
+}
+
 PyObject *
 PyPolyad_FromBuffer(Py_buffer *view, size_t off, size_t len)
 {
-    if (len == 0)
+    if (len == 0) {
         len = view->len;
+    }
     if (len > view->len || off > len) {
         errno = EINVAL;
-        PyErr_SetFromErrno(PyExc_ValueError);
+        PyPolyad_SetErrFromErrno();
         return NULL;
     }
 
-    /* allocate new pack object */
+    /* allocate new polyad object */
     PyPolyad *self;
     self = (PyPolyad*) PyPolyad_Type.tp_alloc(&PyPolyad_Type, 0);
     if (!self)
@@ -60,20 +80,17 @@ PyPolyad_FromBuffer(Py_buffer *view, size_t off, size_t len)
     }
     *self->src = *view;
 
-    /* load and initialize pack pointers from data buffer */
-    self->pack = polyad_load(len, view->buf + off, true);
-    if (!self->pack) {
-        if (errno == ENOMEM)
-            PyErr_SetFromErrno(PyExc_MemoryError);
-        else
-            PyErr_SetFromErrno(PyExc_ValueError);
+    /* load and initialize polyad pointers from data buffer */
+    if (polyad_load(view->buf + off, len, &self->polyad)) {
+        return (PyObject*) self;
+
+    } else {
+        /* failure */
+        PyPolyad_SetErrFromErrno();
         PyMem_Free(self->src);
         PyPolyad_Type.tp_free(self);
         return NULL;
     }
-    /* prevent access to the owned buffer reference */
-    memset(view, 0, sizeof(Py_buffer));
-    return (PyObject*) self;
 }
 
 PyObject *
@@ -82,43 +99,50 @@ PyPolyad_FromSequence(PyObject *src, const char *errmsg)
     if (NULL == (src = PySequence_Fast(src, errmsg)))
         return NULL;
 
-    Py_ssize_t len = PySequence_Fast_GET_SIZE(src);
-    struct polyad *pack;
-    pack = polyad_prepare(len);
-    if (!pack) {
-        PyErr_SetFromErrno(PyExc_MemoryError);
-        return NULL;
-    }
+    Py_ssize_t rank = PySequence_Fast_GET_SIZE(src);
 
     Py_ssize_t i;
-    Py_buffer view[len];
-    for (i = 0; i < len; i++) {
-        PyObject *obj = PySequence_Fast_GET_ITEM(src, i);
-        if (0 != PyObject_GetBuffer(obj, &view[i], PyBUF_SIMPLE))
+    Py_buffer view[rank];
+    const void *items[rank];
+    size_t lens[rank];
+
+    polyad_t polyad = NULL;
+    PyPolyad *self = NULL;
+
+    for (i = 0; i < rank; i++) {
+        PyObject *const obj = PySequence_Fast_GET_ITEM(src, i);
+        if (0 == PyObject_GetBuffer(obj, &view[i], PyBUF_SIMPLE)) {
+            items[i] = view[i].buf;
+            lens[i] = view[i].len;
+        } else {
             break;
-        polyad_set(pack, i, view[i].len, view[i].buf, true);
+        }
     }
 
-    if (i != len || 0 != polyad_finish(pack)) {
-        if (!PyErr_Occurred())
-            PyErr_SetFromErrno(PyExc_MemoryError);
-        polyad_free(pack);
-        pack = NULL;
+    if (i == rank) {
+        /* initialize the polyad from the item buffers */
+        polyad_init(rank, items, lens, &polyad);
+    } else {
+        PyErr_SetString(PyExc_TypeError, errmsg);
     }
 
     /* release all open buffers */
-    len = i;
-    for (i = 0; i < len; i++)
+    rank = i;
+    for (i = 0; i < rank; i++) {
         PyBuffer_Release(&view[i]);
-    if (!pack)
-        return NULL;
+    }
 
     /* allocate new PyPolyad object */
-    PyPolyad *self;
-    self = (PyPolyad*) PyPolyad_Type.tp_alloc(&PyPolyad_Type, 0);
-    if (self) {
-        self->pack = pack;
-        self->src = NULL;
+    if (polyad) {
+        self = (PyPolyad*) PyPolyad_Type.tp_alloc(&PyPolyad_Type, 0);
+        if (self) {
+            self->polyad = polyad;
+            self->src = NULL;
+        } else {
+            polyad_free(polyad);
+        }
+    } else if (!PyErr_Occurred()) {
+        PyPolyad_SetErrFromErrno();
     }
     return (PyObject*) self;
 }
@@ -147,9 +171,8 @@ PyPolyad_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 int
 PyPolyad_getbuffer(PyPolyad *self, Py_buffer *view, int flags)
 {
-    const struct iovec data = polyad_data(self->pack);
-    return PyBuffer_FillInfo(view, (PyObject*)self, data.iov_base,
-            data.iov_len, true, PyBUF_SIMPLE);
+    return PyBuffer_FillInfo(view, (PyObject*)self, (void *) polyad_data(self->polyad),
+            polyad_size(self->polyad), true, PyBUF_SIMPLE);
 }
 
 PyBufferProcs PyPolyad_as_buffer = {
@@ -161,23 +184,21 @@ PyBufferProcs PyPolyad_as_buffer = {
 Py_ssize_t
 PyPolyad_length(PyObject *self)
 {
-    return polyad_rank(((PyPolyad*)self)->pack);
+    return polyad_rank(((PyPolyad*)self)->polyad);
 }
 
 PyObject*
 PyPolyad_item(PyObject *obj_self, Py_ssize_t i)
 {
     PyPolyad *self = (PyPolyad*) obj_self;
-    if (i >= polyad_rank(self->pack)) {
+    if (i >= polyad_rank(self->polyad)) {
         PyErr_SetString(PyExc_IndexError, "pack index out of range");
         return NULL;
     }
 
     Py_buffer view;
     if (0 == PyObject_GetBuffer(obj_self, &view, PyBUF_SIMPLE)) {
-        const struct iovec data = polyad_item(self->pack, i);
-        view.buf = data.iov_base;
-        view.len = data.iov_len;
+        view.len = polyad_item(self->polyad, i, (const void **) &view.buf);
         return PyMemoryView_FromBuffer(&view);
     }
     return NULL;

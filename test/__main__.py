@@ -117,7 +117,7 @@ def test_ntuple_einval():
     assert_raises(ValueError, pd.ntuple, b'\x01\xff')
 
 def test_polyad_from_bytes():
-    b = b'\x05\x05helloworld'
+    b = b'\x02\x05\x05helloworld'
     p = pd.polyad(b)
     assert(b == bytes(p))
     assert(2 == len(p))
@@ -130,7 +130,7 @@ def test_polyad_from_sequence():
     assert(2 == len(p))
     assert('hello' == str(p[0], 'ascii'))
     assert('world' == str(p[1], 'ascii'))
-    assert(b'\x05\x05helloworld' == bytes(p))
+    assert(b'\x02\x05\x05helloworld' == bytes(p))
     g = (bytes(x, 'ascii') for x in ('hello', 'world'))
     p = pd.polyad(g)
     assert(s == list(p))

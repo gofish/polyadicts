@@ -28,10 +28,12 @@ typedef struct PyPolyad_st
 {
     PyObject_HEAD
     /* underlying C polyad object */
-    struct polyad *pack;
+    polyad_t polyad;
     /* references to parent buffer object, if used */
     Py_buffer *src;
 } PyPolyad;
+
+PyAPI_FUNC(void) PyPolyad_SetErrFromErrno(void);
 
 PyAPI_FUNC(void) PyPolyad_dealloc(PyPolyad* self);
 PyAPI_FUNC(PyObject *) PyPolyad_tp_new(PyTypeObject *type, PyObject *args,

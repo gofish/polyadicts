@@ -22,33 +22,81 @@
 
 #include <stdbool.h>
 #include <sys/types.h>
-#include <sys/uio.h>
 #include "varint.h"
 
 /**
  * polyad - an n-tuple of binary data segments with a polyid header
  */
-
 struct polyad;
 
-/* read a polyad structure from a suppplied data pointer */
-struct polyad * polyad_load(size_t size, void *data, bool shared);
+typedef const struct polyad * polyad_t;
 
-/* free any non-shared memory associated with a polyad */
-void polyad_free(struct polyad *polyad);
+/** The number of items in a polyad. **/
+size_t polyad_rank(polyad_t p);
 
-size_t       polyad_rank(struct polyad *p);
-struct iovec polyad_data(struct polyad *p);
-struct iovec polyad_item(struct polyad *p, size_t i);
+/** The number of bytes in a polyad. **/
+size_t polyad_size(polyad_t p);
+
+/** The data buffer backing the entire polyad. **/
+const void * polyad_data(polyad_t p);
 
 /**
- * The following three functions should be used in consecutive order only
+ * The data buffer corresponding to a particular item.
+ *
+ * @param p the polyad
+ * @param i the item index ({@code 0 <= i < polyad_rank(p)})
+ * @param dst the address of a NULL-initialized memory address
+ * @return
+ *   The address at {@code item} will contain a pointer to the start of
+ *   the polyad item buffer, or NULL on error. On success, the return
+ *   value will be the size of this buffer.
+ * @error EINVAL {@code i} is greater or equal to the polyad rank
+ */
+size_t polyad_item(polyad_t p, size_t i, const void **dst);
+
+/**
+ * Allocate and initialize a polyad structure from serialized form.
+ *
+ * The buffer at the {@code data} address WILL be shared -- it must not be
+ * freed before the returned polyad struct is freed.
+ *
+ * @param src a pointer to the read buffer
+ * @param len the buffer size (maximum length of polyad)
+ * @param dst the address of an uninitialized polyad pointer
+ * @return the number of bytes read
+ * @error ERANGE a stored varint would overflow the {@code size_t} of this architecture
+ * @error EINVAL the buffer {@code size} is too small to read a full polyad
  **/
-/* initialize a new polyad object prepared to store n entries */
-struct polyad* polyad_prepare(size_t nitem);
-/* set the i'th item in a polyad to the given data */
-int polyad_set(struct polyad *polyad, size_t i, size_t size, void *data, bool shared);
-/* allocate a single memory buffer and store the packed items */
-int polyad_finish(struct polyad *polyad);
+size_t polyad_load(const void *src, size_t len, polyad_t *dst);
+
+/**
+ * Allocate and initialize a new polyad structure from items.
+ *
+ * The item memory buffers WILL NOT be shared -- a new buffer will be
+ * allocated to contain the polyad structure and backing data buffer.
+ *
+ * @param rank the number of items in the polyad
+ * @param items an array of {@code rank} item buffers
+ * @param sizes the size of each corresponding buffer in {@code items}
+ * @param dst the address of an uninitialized polyad pointer
+ * @return the size of the polyad data buffer
+ */
+size_t polyad_init(size_t rank, const void **items, const size_t *sizes, polyad_t *dst);
+
+/**
+ * Copy a polyad into another data buffer.
+ *
+ * @param src the source polyad
+ * @param dst the destination buffer
+ * @param len the length of the destination buffer)
+ * @return the number of bytes copied
+ * @error EINVAL {@code len} is too small to contain {@code src}
+ */
+size_t polyad_copy(polyad_t src, void *dst, size_t len);
+
+/**
+ * Free the memory associated with a polyad.
+ **/
+void   polyad_free(polyad_t p);
 
 #endif
