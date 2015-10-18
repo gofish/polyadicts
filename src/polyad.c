@@ -41,7 +41,7 @@ struct polyad
     // total polyad length and data pointer
     struct polyad_info self;
     // number and array of stored items
-    uint32_t nitem;
+    size_t nitem;
     struct polyad_info *item;
 };
 
@@ -51,9 +51,8 @@ struct polyad* polyad_load(size_t size, void *data, bool shared)
 
     polyad = malloc(sizeof(struct polyad));
     if (polyad) {
-        uint8_t vi_size;
         void *head, *tail;
-        uint64_t item_size;
+        size_t vi_size, item_size;
 
         polyad->self.size = size;
         polyad->self.data = data;
@@ -65,7 +64,7 @@ struct polyad* polyad_load(size_t size, void *data, bool shared)
         head = data;
         tail = data + size;
         while (head < tail) {
-            vi_size = vi_to_uint64(head, tail - head, &item_size);
+            vi_size = vi_to_size(head, tail - head, &item_size);
             if (vi_size) {
                 head += vi_size;
                 tail -= item_size;
@@ -79,10 +78,10 @@ struct polyad* polyad_load(size_t size, void *data, bool shared)
             /* allocate item array and scan header again for item offsets */
             polyad->item = malloc(polyad->nitem * sizeof(struct polyad_info));
             if (polyad->item) {
-                uint32_t i;
+                size_t i;
                 head = data;
                 for (i = 0; i < polyad->nitem; i++) {
-                    vi_size = vi_to_uint64(head, tail - head, &item_size);
+                    vi_size = vi_to_size(head, tail - head, &item_size);
                     assert(vi_size); // (tail - head) OK since already validated against overread above
                     polyad->item[i].size = item_size;
                     polyad->item[i].data = tail;
@@ -107,7 +106,7 @@ void polyad_free(struct polyad *polyad)
 {
     assert(polyad);
 
-    uint32_t i;
+    size_t i;
     for (i = 0; i < polyad->nitem; i++) {
         if (!polyad->item[i].shared)
             free(polyad->item[i].data);
@@ -136,7 +135,7 @@ polyad_item(struct polyad *p, size_t i)
     return (struct iovec) {.iov_base = p->item[i].data, .iov_len = p->item[i].size};
 }
 
-struct polyad* polyad_prepare(uint32_t nitem)
+struct polyad* polyad_prepare(size_t nitem)
 {
     struct polyad *polyad;
 
@@ -147,7 +146,7 @@ struct polyad* polyad_prepare(uint32_t nitem)
         polyad->self.shared = true;
         polyad->item = malloc(nitem * sizeof(struct polyad_info));
         if (polyad->item) {
-            uint32_t i;
+            size_t i;
             for (i = 0; i < nitem; i++) {
                 polyad->item[i].size = 0;
                 polyad->item[i].data = NULL;
@@ -162,7 +161,7 @@ struct polyad* polyad_prepare(uint32_t nitem)
     return polyad;
 }
 
-int polyad_set(struct polyad *polyad, uint32_t i, size_t size, void *data, bool shared)
+int polyad_set(struct polyad *polyad, size_t i, size_t size, void *data, bool shared)
 {
     assert(polyad);
 
@@ -186,7 +185,7 @@ int polyad_finish(struct polyad *polyad)
     assert(polyad);
 
     int retval;
-    uint32_t i;
+    size_t i;
     size_t head_size, tmp;
     /* count header size and total required buffer size */
     head_size = 0;
@@ -195,7 +194,7 @@ int polyad_finish(struct polyad *polyad)
         /* size of item */
         polyad->self.size += polyad->item[i].size;
         /* size of varint to required to represent item size */
-        tmp = uint64_to_vi(polyad->item[i].size, NULL, -1);
+        tmp = size_to_vi(polyad->item[i].size, NULL, -1);
         head_size += tmp;
         polyad->self.size += tmp;
     }
@@ -208,7 +207,7 @@ int polyad_finish(struct polyad *polyad)
         polyad->self.shared = false;
 
         for (i = 0; i < polyad->nitem; i++) {
-            head += uint64_to_vi(polyad->item[i].size, head, tail - head);
+            head += size_to_vi(polyad->item[i].size, head, tail - head);
             /* copy item data to shared buffer */
             memcpy(tail, polyad->item[i].data, polyad->item[i].size);
             /* free old data */

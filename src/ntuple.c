@@ -18,22 +18,21 @@
 */
 
 #include <errno.h>
+#include <limits.h>
 #include <stdlib.h>
 #include "ntuple.h"
 #include "varint.h"
 
 size_t
-ntuple_size(size_t rank, const uint64_t *info)
+ntuple_size(size_t rank, const size_t *info)
 {
-    size_t size, i;
-    uint8_t n;
-
+    size_t size, n, i;
     size = 0;
-    n = uint64_to_vi(rank, NULL, -1);
+    n = size_to_vi(rank, NULL, -1);
     if (n) {
         size = n;
         for (i = 0; i < rank; i++) {
-            n = uint64_to_vi(info[i], NULL, -1);
+            n = size_to_vi(info[i], NULL, -1);
             if (n) {
                 size += n;
             } else {
@@ -46,18 +45,15 @@ ntuple_size(size_t rank, const uint64_t *info)
 }
 
 size_t
-ntuple_pack(size_t rank, const uint64_t *info, void *data, size_t size)
+ntuple_pack(size_t rank, const size_t *info, void *data, size_t size)
 {
-    size_t off;
-    uint8_t n;
-    size_t i;
-
+    size_t off, n, i;
     off = 0;
-    n = uint64_to_vi(rank, data, size);
+    n = size_to_vi(rank, data, size);
     if (n) {
         off = n;
         for (i = 0; i < rank; i++) {
-            n = uint64_to_vi(info[i], data + off, size - off);
+            n = size_to_vi(info[i], data + off, size - off);
             if (n) {
                 off += n;
             } else {
@@ -72,36 +68,20 @@ ntuple_pack(size_t rank, const uint64_t *info, void *data, size_t size)
 size_t
 ntuple_rank(const void *data, size_t size, size_t *rank)
 {
-    uint64_t x;
-    uint8_t n;
-
-    n = vi_to_uint64(data, size, &x);
-    if (n) {
-        if (x <= SIZE_MAX) {
-            *rank = x;
-        } else {
-            errno = ERANGE;
-            n = 0;
-        }
-    }
-    return n;
+    return vi_to_size(data, size, rank);
 }
 
 size_t
-ntuple_load(const void *data, size_t size, size_t rank, uint64_t *info)
+ntuple_load(const void *data, size_t size, size_t rank, size_t *info)
 {
-    size_t off;
-    uint64_t x;
-    uint8_t n;
-    size_t i;
-
+    size_t off, n, i, x;
     off = 0;
-    n = vi_to_uint64(data, size, &x);
+    n = vi_to_size(data, size, &x);
     if (n) {
         if (x == rank) {
             off = n;
             for (i = 0; i < rank; i++) {
-                n = vi_to_uint64(data + off, size - off, &info[i]);
+                n = vi_to_size(data + off, size - off, &info[i]);
                 if (n) {
                     off += n;
                 } else {

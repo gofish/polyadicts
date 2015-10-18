@@ -21,16 +21,15 @@
 #define _ntuple_h_DEFINED
 
 #include <stddef.h>
-#include <stdint.h>
 
 /**
  * ntuple - an n-tuple of natural numbers packed as varints
  */
 
-size_t ntuple_size(size_t rank, const uint64_t *info);
-size_t ntuple_pack(size_t rank, const uint64_t *info, void *data, size_t size);
+size_t ntuple_size(size_t rank, const size_t *info);
+size_t ntuple_pack(size_t rank, const size_t *info, void *data, size_t size);
 
 size_t ntuple_rank(const void *data, size_t size, size_t *rank);
-size_t ntuple_load(const void *data, size_t size, size_t rank, uint64_t *info);
+size_t ntuple_load(const void *data, size_t size, size_t rank, size_t *info);
 
 #endif /* _varint_h_DEFINED */

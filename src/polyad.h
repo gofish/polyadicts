@@ -45,9 +45,9 @@ struct iovec polyad_item(struct polyad *p, size_t i);
  * The following three functions should be used in consecutive order only
  **/
 /* initialize a new polyad object prepared to store n entries */
-struct polyad* polyad_prepare(uint32_t nitem);
+struct polyad* polyad_prepare(size_t nitem);
 /* set the i'th item in a polyad to the given data */
-int polyad_set(struct polyad *polyad, uint32_t i, size_t size, void *data, bool shared);
+int polyad_set(struct polyad *polyad, size_t i, size_t size, void *data, bool shared);
 /* allocate a single memory buffer and store the packed items */
 int polyad_finish(struct polyad *polyad);
 

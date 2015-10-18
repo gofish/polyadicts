@@ -18,6 +18,7 @@
 */
 
 #include <errno.h>
+#include <stdint.h>
 #include "varint.h"
 
 static const uint8_t LogTable256[256] =
@@ -66,7 +67,7 @@ uint32_log2(const uint32_t x)
 #endif
 }
 
-inline uint8_t
+static inline uint8_t
 uint64_log2(const uint64_t x)
 {
     if (x < 0x100000000LL)
@@ -86,26 +87,29 @@ vi_lvp(void *vi, uint8_t i)
     return &(((uint8_t *)vi)[i]);
 }
 
-uint8_t
-vi_copy(const void *const src, void *const dst)
+size_t
+vi_copy(const void *const src, size_t len, void *const dst)
 {
-    uint8_t i;
+    size_t i;
     i = 0;
     for (;;) {
         if (!((*vi_lvp(dst,i) = vi_rv(src,i)) & 0x80)) break;
         if (++i == VI_MAX_LEN) {
             errno = ERANGE;
             return 0;
+        } else if (i == len) {
+            errno = EINVAL;
+            return 0;
         }
     }
     return i;
 }
 
-uint8_t
-vi_to_uint64(const void *const v, size_t l, uint64_t *x)
+size_t
+vi_to_size(const void *const v, size_t l, size_t *x)
 {
-    uint64_t y;
-    uint8_t i;
+    size_t y;
+    size_t i;
     y = i = 0;
     for (;;) {
         if (i == l) {
@@ -123,10 +127,10 @@ vi_to_uint64(const void *const v, size_t l, uint64_t *x)
     return i;
 }
 
-uint8_t
-uint64_to_vi(uint64_t x, void *const v, size_t l)
+size_t
+size_to_vi(size_t x, void *const v, size_t l)
 {
-    uint8_t s, i;
+    size_t s, i;
     if (x > VI_MAX) {
         errno = ERANGE;
         return 0;
