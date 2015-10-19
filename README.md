@@ -1,18 +1,24 @@
 
 ## Building
 
-Uses Python3 and setuptools. See Makefile and setup.py for more.
+Uses Python3 and setuptools.
 
-The following should be enough to produce a shared library implementing the `polyadicts Python module under `build`/
+    $ make
+
+The above will execute the following.
 
     $ python3 setup.py build
 
-On Ubuntu 15.04 with Python 3.4, this appears as
+This should produce the `polyadicts` Python module under `build/`.
 
-    build/lib.linux-x86_64-3.4/polyadicts.cpython-34m.so
+e.g.
+: `build/lib.linux-x86_64-3.4/polyadicts.cpython-34m.so`
 
 ## Notes
 
-Some (limited) tests are implemented for basic wire format checks. In general,
-this project is not considered safe to pack or unpack untrusted data until a
-thorough review can be performed on the latest API implementation.
+Some (limited) tests are implemented for basic wire format checks.
+
+This project is not considered safe to pack or unpack untrusted data.
+
+A thorough review is planned for the latest API implementation, after
+which this warning will be removed but no warranty will be provided.
