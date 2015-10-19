@@ -33,24 +33,23 @@ which this warning will be removed, but no warranty will be provided.
 
 ## Rational
 
-It is the authors belief that a bare-bones *n*-tuple implementation will
-provide a solid foundation for simple and beautiful encapsulation. Many
-other options exist, such as JSON, XML, pickling, struct, protobufs, etc..
-`polyadicts` aims to be simpler than most of these at its core while
-remaining rich in expressiveness, compact in representation, and efficient
-overall.
+A bare-bones *n*-tuple implementation can provide a solid foundation for
+simple and beautiful data encapsulation. Many other formats exist already,
+such as JSON, XML, pickling, struct, protobufs, etc.. `polyadicts` aims to
+be simpler than most of these at its core while remaining rich in
+expressiveness, compact in representation, and efficient overall.
 
 JSON with its spare format supports an incredibly rich encapsulation API.
 It is compact, human-readable, and composable. `polyadicts` cannot replace
-JSON but instead implements a compact, machine-readable, and composable
-alternative that aims to be fully compatible (read: convertible).
+JSON but instead implements a similar compact, machine-readable, and
+composable binary format that aims to be fully compatible with JSON.
 
 `polyadicts` uses a binary format in order to obtain faster processing and
 a better pre-compression storage ratio than JSON. The format includes a
 field index that allows for random access to or skipping of elements within
-a tuple. While the on-disk (serialized) form makes no distinction between
-lists and maps, unlike JSON, the latter may be represented either as a *k*-
-list of 2-tuples or as a 2-tuple of *k*-lists without loss of generality.
+a tuple. Unlike JSON, the format makes no distinction between lists and
+maps. The latter may be represented as a *k*-tuple of 2-tuples, or as a 2-
+tuple of *k*-tuples, without loss of generality.
 
 ## Format
 
