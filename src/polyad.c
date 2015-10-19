@@ -123,24 +123,22 @@ polyad_load(const void *data, size_t size, const struct polyad **dst)
 size_t
 polyad_init(size_t rank, const void **items, const size_t *sizes, const struct polyad **dst)
 {
-    size_t size, off, n, i;
+    size_t off, i;
     struct polyad *p;
-    off = 0;
     *dst = NULL;
     /* calculate total header and item size */
-    size = ntuple_size(rank, sizes);
-    if (size) {
+    off = ntuple_size(rank, sizes);
+    if (off) {
         for (i = 0; i < rank; i++) {
-            size += sizes[i];
+            off += sizes[i];
         }
         /* allocate polyad and data buffer */
-        p = malloc(size + off + SIZEOF_POLYAD(rank));
+        p = malloc(off + SIZEOF_POLYAD(rank));
         if (p) {
             p->rank = rank;
             p->data = ((char *) p) + SIZEOF_POLYAD(rank);
-            n = ntuple_pack(rank, sizes, (void *)p->data, size);
-            if (n) {
-                off = n;
+            off = ntuple_pack(rank, sizes, (void *)p->data, off);
+            if (off) {
                 for (i = 0; i < rank; i++) {
                     memcpy((void *)p->data + off, items[i], sizes[i]);
                     p->item_off[i] = off;
