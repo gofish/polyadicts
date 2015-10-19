@@ -60,7 +60,6 @@ def assert_raises(err, f, *args, **kwds):
 def test_ntuple_from_bytes():
     b = b'\x01\x00'
     t = pd.ntuple(b)
-    t = pd.ntuple(b)
     assert(b == pd.ntuple(t))
     assert(1 == len(t))
     assert(0 == t[0])
