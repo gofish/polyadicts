@@ -22,12 +22,14 @@
 
 #include <stddef.h>
 
-/** We support up to 9 x 7-bit bytes **/
+/** We support up to 9 bytes x 7-bits on 64-bits, 4 x 7 on 32 **/
 #define VI_MAX_LEN (sizeof(size_t) * 8 / 7)
 /** This provides for 63 bits of data **/
 #define VI_MAX ((1ULL << (7 * VI_MAX_LEN)) - 1LL)
 
 /**
+ * Copy a 7-bit varint from one buffer to another.
+ *
  * @param src the source buffer (contains varint)
  * @param len the length of the source buffer
  * @param dst the destination buffer (of size at least {@code len})
@@ -38,6 +40,8 @@
 size_t vi_copy(const void *src, size_t len, void *dst);
 
 /**
+ * Read a 7-bit varint from a buffer into a standard unsigned size type.
+ *
  * @param src the source buffer (contains varint)
  * @param len the length of the source buffer
  * @param dst the size output variable
@@ -48,6 +52,8 @@ size_t vi_copy(const void *src, size_t len, void *dst);
 size_t vi_to_size(const void *src, size_t len, size_t *dst);
 
 /**
+ * Write a standard unsigned size type to a buffer as a 7-bit varint.
+ *
  * @param src the size source variable
  * @param dst the destination buffer (to contain varint)
  * @param len the length of the destination buffer
