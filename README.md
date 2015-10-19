@@ -28,9 +28,8 @@ e.g.
 Some (limited) tests are implemented for basic wire format checks.
 
 This project is not considered safe to pack or unpack untrusted data.
-
 A thorough review is planned for the latest API implementation, after
-which this warning will be removed but no warranty will be provided.
+which this warning will be removed, but no warranty will be provided.
 
 ## Rational
 
