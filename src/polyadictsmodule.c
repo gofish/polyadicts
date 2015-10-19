@@ -52,7 +52,7 @@ _ntuple_frombuffer(PyObject *src)
         }
     }
     if (!ret && !PyErr_Occurred()) {
-        PyErr_SetFromErrno(PyExc_ValueError);
+        PyPolyad_SetErrFromErrno();
     }
     return ret;
 }
