@@ -155,6 +155,19 @@ polyad_init(size_t rank, const void **items, const size_t *sizes, const struct p
     return off;
 }
 
+size_t
+polyad_copy(const struct polyad *src, void *dst, size_t len)
+{
+    const size_t size = polyad_size(src);
+    if (len >= size) {
+        memcpy(dst, polyad_data(src), polyad_size(src));
+        return polyad_size(src);
+    } else {
+        errno = EINVAL;
+        return 0;
+    }
+}
+
 void
 polyad_free(const struct polyad *p)
 {
