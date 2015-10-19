@@ -47,9 +47,9 @@ composable binary format that aims to be fully compatible with JSON.
 `polyadicts` uses a binary format in order to obtain faster processing and
 a better pre-compression storage ratio than JSON. The format includes a
 field index that allows for random access to or skipping of elements within
-a tuple. Unlike JSON, the format makes no distinction between lists and
-maps. The latter may be represented as a *k*-tuple of 2-tuples, or as a 2-
-tuple of *k*-tuples, without loss of generality.
+a tuple. Unlike JSON the format makes no distinction between lists (tuples)
+and objects (maps). The latter may be represented instead as a *k*-tuple of
+2-tuples, or as a 2-tuple of *k*-tuples, without loss of generality.
 
 ## Format
 
