@@ -91,9 +91,9 @@ may be stored using zig-zag encoding:
 The `polyad` type shares buffers on reads, provides zero-copy access to
 each binary element, and is fully composable. In Python, the `polyad` is
 a cross between `tuple` and `bytes`. The `len()` operator will return the
-rank of the polyad while the index operator (`p[0]`) will return a memory
-view (buffer) for the specified element. When treated as a buffer, e.g.
-via `bytes` or `IOBase.write()`, the polyad exposes its own data buffer as
+rank of the polyad and the index operator (`p[0]`) will return a memory
+view (buffer) for the specified element. When treated as a buffer however,
+e.g. via `bytes` or `IOBase.write()`, the polyad exposes its own buffer as
 a memory view, including the `ntuple` header.
 
     >>> p = polyad((b'hello', b'world'))
