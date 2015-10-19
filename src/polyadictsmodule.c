@@ -126,10 +126,38 @@ polyadicts_ntuple(PyObject *self, PyObject *args)
     return ret;
 }
 
+static PyObject *
+polyadicts_zig(PyObject *self, PyObject *arg)
+{
+    const PY_LONG_LONG n = PyLong_AsLongLong(arg);
+    if (PyErr_Occurred()) {
+        return NULL;
+    } else {
+        return PyLong_FromUnsignedLongLong((n << 1) ^ (n >> (8 * sizeof(PY_LONG_LONG) - 1)));
+    }
+}
+
+static PyObject *
+polyadicts_zag(PyObject *self, PyObject *arg)
+{
+    const unsigned PY_LONG_LONG n = PyLong_AsUnsignedLongLong(arg);
+    if (PyErr_Occurred()) {
+        return NULL;
+    } else {
+        return PyLong_FromLongLong((n >> 1) ^ -(n & 1));
+    }
+}
+
 /* polyadicts module method defition */
 static PyMethodDef polyadicts_methods[] = {
     {"ntuple", polyadicts_ntuple, METH_VARARGS,
         "Pack or load a sequence of natural numbers"},
+
+    {"zig", polyadicts_zig, METH_O,
+        "ZigZag encode a signed int as unsigned"},
+
+    {"zag", polyadicts_zag, METH_O,
+        "ZigZag decode an unsigned int as signed"},
 
     {NULL} // Sentinel
 };
