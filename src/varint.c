@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include <stdint.h>
+#include <string.h>
 #include "varint.h"
 
 static const uint8_t LogTable256[256] =
@@ -93,38 +94,41 @@ vi_copy(const void *const src, size_t len, void *const dst)
     size_t i;
     i = 0;
     for (;;) {
-        if (!((*vi_lvp(dst,i) = vi_rv(src,i)) & 0x80)) break;
-        if (++i == VI_MAX_LEN) {
-            errno = ERANGE;
-            return 0;
-        } else if (i == len) {
+        if (i == len) {
             errno = EINVAL;
             return 0;
+        } else if (i == VI_MAX_LEN) {
+            errno = ERANGE;
+            return 0;
+        } else {
+            if (!(vi_rv(src, i++) & 0x80)) {
+                memcpy(dst, src, i);
+                return i;
+            }
         }
     }
-    return i;
 }
 
 size_t
-vi_to_size(const void *const v, size_t l, size_t *x)
+vi_to_size(const void *const src, size_t len, size_t *dst)
 {
-    size_t y;
-    size_t i;
-    y = i = 0;
+    size_t x, i;
+    x = i = 0;
     for (;;) {
-        if (i == l) {
+        if (i == len) {
             errno = EINVAL;
             return 0;
-        }
-        if (i == VI_MAX_LEN) {
+        } else if (i == VI_MAX_LEN) {
             errno = ERANGE;
             return 0;
+        } else {
+            x |= (vi_rv(src, i) & 0x7fLL) << (7 * i);
+            if (!(vi_rv(src, i++) & 0x80)) {
+                *dst = x;
+                return i;
+            }
         }
-        y |= (vi_rv(v,i) & 0x7fLL) << (7 * i);
-        if (!(vi_rv(v,i++) & 0x80)) break;
     }
-    *x = y;
-    return i;
 }
 
 size_t

@@ -35,7 +35,7 @@
  * @error EINVAL if {@code len} is too short to read all of {@code src}
  * @error ERANGE if more than {@code VI_MAX_LEN} would be read
  */
-size_t vi_copy   (const void *src, size_t len, void *dst);
+size_t vi_copy(const void *src, size_t len, void *dst);
 
 /**
  * @param src the source buffer (contains varint)
