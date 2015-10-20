@@ -35,14 +35,16 @@ which this warning will be removed, but no warranty will be provided.
 
 A bare-bones *n*-tuple implementation can provide a solid foundation for
 simple and beautiful data encapsulation. Many other formats exist already,
-such as JSON, XML, pickling, struct, protobufs, etc.. `polyadicts` aims to
-be simpler than most of these at its core while remaining rich in
+such as JSON, XML, pickling, struct, protobufs, etc.. `polyadicts` is
+simpler than most of these at its core while remaining rich in
 expressiveness, compact in representation, and efficient overall.
 
 JSON with its spare format supports an incredibly rich encapsulation API.
 It is compact, human-readable, and composable. `polyadicts` cannot replace
 JSON but instead implements a similar compact, machine-readable, and
-composable binary format that aims to be fully compatible with JSON.
+composable binary format. It is intended that data representable in one
+format is also representable in the other, and vice versa, but they are not
+necessarily directly convertible.
 
 `polyadicts` uses a binary format in order to obtain faster processing and
 a better pre-compression storage ratio than JSON. The format includes a
