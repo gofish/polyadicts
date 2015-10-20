@@ -217,10 +217,10 @@ PyPolyad_item(PyObject *obj_self, Py_ssize_t i)
 }
 
 PySequenceMethods PyPolyad_as_sequence = {
-    (lenfunc)PyPolyad_length, /*sq_length*/
+    (lenfunc)PyPolyad_length,   /*sq_length*/
     NULL,                       /*sq_concat*/
     NULL,                       /*sq_repeat*/
-    (ssizeargfunc)PyPolyad_item,  /*sq_item*/
+    (ssizeargfunc)PyPolyad_item,/*sq_item*/
     NULL,                       /*sq_ass_item*/
     NULL,                       /*sq_contains*/
     NULL,                       /*sq_inplace_concat*/
@@ -230,8 +230,8 @@ PySequenceMethods PyPolyad_as_sequence = {
 /* PyPolyad type definition */
 PyTypeObject PyPolyad_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "polyadicts.polyad",             /*tp_name*/
-    sizeof(PyPolyad),         /*tp_basicsize*/
+    "polyadicts.polyad",        /*tp_name*/
+    sizeof(PyPolyad),           /*tp_basicsize*/
     0,                          /*tp_itemsize*/
     (destructor)PyPolyad_dealloc, /*tp_dealloc*/
     0,                          /*tp_print*/
@@ -240,14 +240,14 @@ PyTypeObject PyPolyad_Type = {
     0,                          /*tp_compare*/
     0,                          /*tp_repr*/
     0,                          /*tp_as_number*/
-    &PyPolyad_as_sequence,    /*tp_as_sequence*/
+    &PyPolyad_as_sequence,      /*tp_as_sequence*/
     0,                          /*tp_as_mapping*/
     0,                          /*tp_hash */
     0,                          /*tp_call*/
     0,                          /*tp_str*/
     0,                          /*tp_getattro*/
     0,                          /*tp_setattro*/
-    &PyPolyad_as_buffer,      /*tp_as_buffer*/
+    &PyPolyad_as_buffer,        /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT,         /*tp_flags*/
     "polyad(bufferable | sequence)", /* tp_doc */
     0,                          /* tp_traverse */
@@ -266,5 +266,5 @@ PyTypeObject PyPolyad_Type = {
     0,                          /* tp_dictoffset */
     0,                          /* tp_init */
     0,                          /* tp_alloc */
-    PyPolyad_tp_new,          /* tp_new */
+    PyPolyad_tp_new,            /* tp_new */
 };
