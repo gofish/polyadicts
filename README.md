@@ -72,7 +72,7 @@ The binary segments follow the header directly in order without padding.
 
 The `ntuple` supports unsigned integers that can fit into a `size_t` type.
 For 64-bit programs up to 9 bytes of 7-bit varints are supported, handling
-all unsigned values from 0 to 63 bits. For 32-bits programs, up to 4 bytes
+all unsigned values from 0 to 63 bits. For 32-bit programs, up to 4 bytes
 are permitted, handling unsigned values from 0 to 28 bits. Negative values
 may be stored using zig-zag encoding:
 
