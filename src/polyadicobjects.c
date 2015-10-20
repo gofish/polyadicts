@@ -105,15 +105,25 @@ PyPolyad_FromSequence(PyObject *src, const char *errmsg)
     Py_buffer view[rank];
     const void *items[rank];
     size_t lens[rank];
+    Py_ssize_t utf_len;
 
     polyad_t polyad = NULL;
     PyPolyad *self = NULL;
 
     for (i = 0; i < rank; i++) {
         PyObject *const obj = PySequence_Fast_GET_ITEM(src, i);
-        if (0 == PyObject_GetBuffer(obj, &view[i], PyBUF_SIMPLE)) {
+        if (PyObject_CheckBuffer(obj) &&
+                0 == PyObject_GetBuffer(obj, &view[i], PyBUF_SIMPLE)) {
             items[i] = view[i].buf;
             lens[i] = view[i].len;
+        } else if (PyUnicode_Check(obj) && 0 == PyUnicode_READY(obj)) {
+            items[i] = PyUnicode_AsUTF8AndSize(obj, &utf_len);
+            if (items[i]) {
+                lens[i] = utf_len;
+                view[i].buf = NULL;
+            } else {
+                break;
+            }
         } else {
             break;
         }
@@ -129,7 +139,9 @@ PyPolyad_FromSequence(PyObject *src, const char *errmsg)
     /* release all open buffers */
     rank = i;
     for (i = 0; i < rank; i++) {
-        PyBuffer_Release(&view[i]);
+        if (view[i].buf) {
+            PyBuffer_Release(&view[i]);
+        }
     }
 
     /* allocate new PyPolyad object */

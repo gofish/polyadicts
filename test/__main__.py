@@ -130,16 +130,19 @@ def test_polyad_from_sequence():
     assert('hello' == str(p[0], 'ascii'))
     assert('world' == str(p[1], 'ascii'))
     assert(b'\x02\x05\x05helloworld' == bytes(p))
-    g = (bytes(x, 'ascii') for x in ('hello', 'world'))
+    g = [bytes(x, 'ascii') for x in ('hello', 'world')]
     p = pd.polyad(g)
     assert(s == list(p))
+    p = pd.polyad(('hello', 'world'))
+    assert(g == list(p))
+    p = pd.polyad('foo')
+    assert(3 == len(p))
+    assert(b'foo' == b''.join(map(bytes, p)))
 
 def test_polyad_from_other():
     assert_raises(TypeError, pd.polyad, None)
     assert_raises(TypeError, pd.polyad, 1)
-    assert_raises(TypeError, pd.polyad, 'foo')
     assert_raises(TypeError, pd.polyad, range(2))
-    assert_raises(TypeError, pd.polyad, ['hello', 'world'])
 
 def test_polyad_einval():
     assert_raises(ValueError, pd.polyad, b'\x05')
