@@ -93,9 +93,9 @@ its own buffer as a memory view, including the `ntuple` header.
     >>> len(p)
     2
     >>> bytes(p[0])
-    b'hello
+    b'hello'
     >>> bytes(p[1]))
-    b'world
+    b'world'
     >>> len(memoryview(p))
     13
     >>> bytes(p)
