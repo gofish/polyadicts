@@ -6,7 +6,7 @@ SETUPOPTS ?= --quiet
 
 .PHONY: build test clean
 
-all:	build test doc
+all:	build test
 
 build bdist bdist_egg:
 	$(PYTHON) $(SETUP) $(SETUPOPTS) $@
