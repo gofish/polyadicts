@@ -14,6 +14,9 @@ build bdist bdist_egg:
 test:   build
 	$(PYTHON) -B test/
 
+test-shell:   build
+	$(PYTHON) -i -B test/
+
 clean:
 	$(PYTHON) $(SETUP) $(SETUPOPTS) clean --all
 

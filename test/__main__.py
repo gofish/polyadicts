@@ -34,6 +34,9 @@ def main(buildroot='build'):
     test_polyad_einval()
     test_polyad_enomem()
 
+    test_zig()
+    test_zag()
+
 def dopath(buildroot):
     path = '%(buildroot)s/lib.%(lsystem)s-%(machine)s-%(version)s' % dict(
         buildroot=buildroot,
@@ -161,6 +164,56 @@ def test_polyad_enomem():
         assert_raises(MemoryError, pd.polyad, [b])
     finally:
         setrlimit(RLIMIT_AS, (soft, hard))
+
+def zigrange(start, stop, *vargs):
+    step = 1
+    if len(vargs) > 1:
+        raise TypeError("expected at most 3 arguments, got {}".format(2 + len(vargs)))
+    if vargs:
+        step, = vargs
+    for i in range(start, stop, step):
+        if i < 0:
+            yield(-2 * i - 1)
+        else:
+            yield(2 * i)
+
+def zagrange(start, stop, *vargs):
+    step = 1
+    low = min(0, start, stop)
+    if low:
+        raise TypeError("OverflowError: can't convert negative {} to unsigned".format(type(low).__name__))
+    if len(vargs) > 1:
+        raise TypeError("expected at most 3 arguments, got {}".format(2 + len(vargs)))
+    if vargs:
+        step, = vargs
+    for i in range(start, stop, step):
+        if i % 2:
+            yield(-i // 2)
+        else:
+            yield(i // 2)
+
+def test_zig():
+    assert(0 == pd.zig( 0))
+    assert(1 == pd.zig(-1))
+    assert(2 == pd.zig( 1))
+    assert((0, 1, 2) == pd.zig(0, -1, 1))
+    assert((0, 1, 2) == pd.zig((0, -1, 1)))
+    def test(l, h):
+        assert(tuple(zigrange(l, h)) == pd.zig(range(l, h)))
+    test(-50, 50)
+    test((-1 << 63), (-1 << 63) + 100)
+    test((1 << 63) - 100, (1 << 63))
+
+def test_zag():
+    assert( 0 == pd.zag(0))
+    assert(-1 == pd.zag(1))
+    assert( 1 == pd.zag(2))
+    assert((0, -1, 1) == pd.zag(0, 1, 2))
+    assert((0, -1, 1) == pd.zag((0, 1, 2)))
+    def test(l, h):
+        assert(tuple(zagrange(l, h)) == pd.zag(range(l, h)))
+    test(0, 100)
+    test((1 << 64) -10, (1 << 64))
 
 if __name__ == '__main__':
     main(*sys.argv[1:])
