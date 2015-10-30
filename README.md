@@ -1,12 +1,9 @@
 
 ## Overview
 
-The `polyadicts` C library and Python module implements a simple API for
-encapsulation of arbitrary binary data within *n*-tuples.
-
-The binary format makes use of 7-bit variable length unsigned integers
-(varint). Effort has been made to reduce memory allocation and copying on
-reads via field indexing and shared buffers.
+The `polyadicts` C library and Python module provides an elemental API for
+encapsulation of binary data as packed *n*-tuples. The format makes use of
+7-bit variable length unsigned integers (varints) for size information.
 
 ## Building
 
@@ -31,44 +28,15 @@ This project is not considered safe to pack or unpack untrusted data.
 A thorough review is planned for the latest API implementation, after
 which this warning will be removed, but no warranty will be provided.
 
-## Rational
-
-A bare-bones *n*-tuple implementation can provide a solid foundation for
-simple and beautiful data encapsulation. Many other formats exist already,
-such as JSON, XML, pickling, struct, protobufs, etc.. `polyadicts` is
-simpler than most of these at its core while remaining rich in
-expressiveness, compact in representation, and efficient overall.
-
-JSON with its spare format supports an incredibly rich encapsulation API.
-It is compact, human-readable, and composable. `polyadicts` cannot replace
-JSON but instead implements a similar compact, machine-readable, and
-composable binary format. It is intended that data representable in one
-format is also representable in the other, and vice versa, but they are not
-necessarily directly convertible.
-
-`polyadicts` uses a binary format in order to obtain faster processing and
-a better pre-compression storage ratio than JSON. The format includes a
-field index that allows for random access to or skipping of elements within
-a tuple. Unlike JSON the format makes no distinction between lists (tuples)
-and objects (maps). The latter may be represented instead as a *k*-tuple of
-2-tuples, or as a 2-tuple of *k*-tuples, without loss of generality.
-
 ## Format
 
-The `ntuple` is a fixed ordered sequence of unsigned integers (natural
-numbers). The binary format for an `ntuple` is written as the rank -- i.e.
-*n*, the number of elements in the tuple -- followed by the *n* numbers
-themselves, all written as 7-bit varints.
+The `ntuple` function maps an ordered sequence of unsigned integers
+(natural numbers) to 7-bit varints in binary form, or vice-versa. The
+first number in the sequence is preceded by the "rank", i.e. *n* - the
+number of elements in the tuple, followed by the *n* numbers themselves.
 
     (0, 1, 2, 3) <=> b'\x04\x00\x01\x02\x03'
     (0, 64, 128) <=> b'\x03\x00\x40\x80\x01'
-
-Similarly, a `polyad` is a fixed ordered sequence of binary data segments.
-The binary format consists of a valid `ntuple` header specifying the rank
-and *n* size values, one for each binary segment the `polyad` contains.
-The binary segments follow the header directly in order without padding.
-
-    (b'hello', b'world') <=> b'\x02\x05\x05helloworld'
 
 The `ntuple` supports unsigned integers that can fit into a `size_t` type.
 For 64-bit programs up to 9 bytes of 7-bit varints are supported, handling
@@ -81,13 +49,21 @@ may be stored using zig-zag encoding:
     >>> tuple(map(zag, _))
     (-3, -2, -1, 0, 1, 2, 3)
 
-The `polyad` type shares buffers on reads, provides zero-copy access to
-each binary element, and is fully composable. In Python, the `polyad` is
-a cross between `tuple` and `bytes`. The `len()` operator will return the
+The `polyad` format is a fixed ordered sequence of binary elements, stored
+in a contiguous buffer. The format consists of a valid `ntuple` header that
+specifies the rank and the *n* binary element sizes. Element data follows
+immediately after the header, in order and without padding.
+
+    (b'hello', b'world') <=> b'\x02\x05\x05helloworld'
+
+The `polyad` type shares buffers on reads, provides access to each element
+data vector, and is fully composable. In Python, the `polyad` implements
+both the sequence and buffer APIs. The `len()` operator will return the
 rank of the polyad and the index operator (`p[0]`) will return a memory
-view (buffer) for the specified element. When a `polyad` is treated as a
-buffer however, e.g. via `bytes` or `IOBase.write()`, the polyad exposes
-its own buffer as a memory view, including the `ntuple` header.
+view (buffer) for the specified element. When a `polyad` is passed to a
+function expecting a buffer (e.g. `memoryview()`, `bytes()` or
+`IOBase.write()`) the polyad exposes its entire backing buffer, including
+the `ntuple` header.
 
     >>> p = polyad((b'hello', b'world'))
     >>> len(p)
