@@ -126,25 +126,127 @@ polyadicts_ntuple(PyObject *self, PyObject *args)
     return ret;
 }
 
+static inline
+unsigned PY_LONG_LONG
+_zig(PY_LONG_LONG n)
+{
+    return (n << 1) ^ (n >> (8 * sizeof(PY_LONG_LONG) - 1));
+}
+
+static inline
+PyObject *
+_zig_object(PyObject *arg)
+{
+    const PY_LONG_LONG n = PyLong_AsLongLong(arg);
+    if (!PyErr_Occurred()) {
+        return PyLong_FromUnsignedLongLong(_zig(n));
+    } else {
+        return NULL;
+    }
+}
+
+static PyObject *
+_zig_sequence(PyObject *arg)
+{
+    PyObject *src, *dst;
+    Py_ssize_t n, i;
+
+    dst = NULL;
+    src = PySequence_Fast(arg, "expected a sequence");
+    if (src) {
+        n = PySequence_Fast_GET_SIZE(src);
+        dst = PyTuple_New(n);
+        if (dst) {
+            for (i = 0; i < n; i++) {
+                PyObject *const val = _zig_object(PySequence_Fast_GET_ITEM(src, i));
+                if (val) {
+                    PyTuple_SET_ITEM(dst, i, val);
+                } else {
+                    Py_DECREF(dst);
+                    dst = NULL;
+                    break;
+                }
+            }
+        }
+        Py_DECREF(src);
+    }
+    return dst;
+}
+
 static PyObject *
 polyadicts_zig(PyObject *self, PyObject *arg)
 {
-    const PY_LONG_LONG n = PyLong_AsLongLong(arg);
-    if (PyErr_Occurred()) {
-        return NULL;
+    if (PyTuple_Size(arg) != 1) {
+        return _zig_sequence(arg);
     } else {
-        return PyLong_FromUnsignedLongLong((n << 1) ^ (n >> (8 * sizeof(PY_LONG_LONG) - 1)));
+        arg = PyTuple_GET_ITEM(arg, 0);
+        if (PySequence_Check(arg)) {
+            return _zig_sequence(arg);
+        } else {
+            return _zig_object(arg);
+        }
     }
+}
+
+static inline
+PY_LONG_LONG
+_zag(unsigned PY_LONG_LONG n)
+{
+    return (n >> 1) ^ -(n & 1);
+}
+
+static inline
+PyObject *
+_zag_object(PyObject *arg)
+{
+    const unsigned PY_LONG_LONG n = PyLong_AsUnsignedLongLong(arg);
+    if (!PyErr_Occurred()) {
+        return PyLong_FromLongLong(_zag(n));
+    } else {
+        return NULL;
+    }
+}
+
+static PyObject *
+_zag_sequence(PyObject *arg)
+{
+    PyObject *src, *dst;
+    Py_ssize_t n, i;
+
+    dst = NULL;
+    src = PySequence_Fast(arg, "expected a sequence");
+    if (src) {
+        n = PySequence_Fast_GET_SIZE(src);
+        dst = PyTuple_New(n);
+        if (dst) {
+            for (i = 0; i < n; i++) {
+                PyObject *const val = _zag_object(PySequence_Fast_GET_ITEM(src, i));
+                if (val) {
+                    PyTuple_SET_ITEM(dst, i, val);
+                } else {
+                    Py_DECREF(dst);
+                    dst = NULL;
+                    break;
+                }
+            }
+        }
+        Py_DECREF(src);
+    }
+    return dst;
 }
 
 static PyObject *
 polyadicts_zag(PyObject *self, PyObject *arg)
 {
-    const unsigned PY_LONG_LONG n = PyLong_AsUnsignedLongLong(arg);
-    if (PyErr_Occurred()) {
-        return NULL;
+    if (PyTuple_Size(arg) != 1) {
+        return _zag_sequence(arg);
     } else {
-        return PyLong_FromLongLong((n >> 1) ^ -(n & 1));
+        arg = PyTuple_GET_ITEM(arg, 0);
+        if (PySequence_Check(arg)) {
+            return _zag_sequence(arg);
+        } else {
+            return _zag_object(arg);
+        }
     }
 }
 
@@ -153,10 +255,10 @@ static PyMethodDef polyadicts_methods[] = {
     {"ntuple", polyadicts_ntuple, METH_VARARGS,
         "Pack or load a sequence of natural numbers"},
 
-    {"zig", polyadicts_zig, METH_O,
+    {"zig", polyadicts_zig, METH_VARARGS,
         "ZigZag encode a signed int as unsigned"},
 
-    {"zag", polyadicts_zag, METH_O,
+    {"zag", polyadicts_zag, METH_VARARGS,
         "ZigZag decode an unsigned int as signed"},
 
     {NULL} // Sentinel

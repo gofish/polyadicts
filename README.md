@@ -44,10 +44,12 @@ all unsigned values from 0 to 63 bits. For 32-bit programs, up to 4 bytes
 are permitted, handling unsigned values from 0 to 28 bits. Negative values
 may be stored using zig-zag encoding:
 
-    >>> tuple(map(zig, range(-3, 4)))
+    >>> zig(range(-3, 4))
     (5, 3, 1, 0, 2, 4, 6)
-    >>> tuple(map(zag, _))
+    >>> zag(_)
     (-3, -2, -1, 0, 1, 2, 3)
+    >>> hex(zig(-1 << 63))
+    '0xffffffffffffffff'
 
 The `polyad` format is a fixed ordered sequence of binary elements, stored
 in a contiguous buffer. The format consists of a valid `ntuple` header that
