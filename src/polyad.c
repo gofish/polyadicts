@@ -29,7 +29,7 @@
 struct polyad {
     size_t rank;
     void * data;
-    size_t item_off[];
+    size_t item[];
 };
 
 size_t
@@ -41,7 +41,7 @@ polyad_rank(const struct polyad *p)
 size_t
 polyad_size(const struct polyad *p)
 {
-    return p->item_off[p->rank];
+    return p->item[p->rank];
 }
 
 const void *
@@ -53,13 +53,13 @@ polyad_data(const struct polyad *p)
 static inline const void *
 _item_buf(const struct polyad *p, size_t i)
 {
-    return ((const char *) p->data) + p->item_off[i];
+    return ((const char *) p->data) + p->item[i];
 }
 
 static inline size_t
 _item_len(const struct polyad *p, size_t i)
 {
-    return p->item_off[i + 1] - p->item_off[i];
+    return p->item[i + 1] - p->item[i];
 }
 
 size_t
@@ -94,7 +94,7 @@ polyad_load(const void *data, size_t size, const struct polyad **dst)
             p->data = (void *) data;
             off = n;
             for (i = 0; i < rank; i++) {
-                n = vi_to_size(data + off, size - off, &p->item_off[i]);
+                n = vi_to_size(data + off, size - off, &p->item[i]);
                 if (n) {
                     off += n;
                 } else {
@@ -104,11 +104,11 @@ polyad_load(const void *data, size_t size, const struct polyad **dst)
             if (i == rank) {
                 /* convert the sizes to data offsets */
                 for (i = 0; i < rank; i++) {
-                    n = p->item_off[i];
-                    p->item_off[i] = off;
+                    n = p->item[i];
+                    p->item[i] = off;
                     off += n;
                 }
-                p->item_off[rank] = off;
+                p->item[rank] = off;
                 /* store the result in destination address */
                 *dst = p;
             } else {
@@ -141,10 +141,10 @@ polyad_init(size_t rank, const void **items, const size_t *sizes, const struct p
             if (off) {
                 for (i = 0; i < rank; i++) {
                     memcpy((void *)p->data + off, items[i], sizes[i]);
-                    p->item_off[i] = off;
+                    p->item[i] = off;
                     off += sizes[i];
                 }
-                p->item_off[rank] = off;
+                p->item[rank] = off;
                 *dst = p;
             } else {
                 free(p);
