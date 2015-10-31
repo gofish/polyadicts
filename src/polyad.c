@@ -28,7 +28,7 @@
 
 struct polyad {
     size_t rank;
-    const void * data;
+    void * data;
     size_t item_off[];
 };
 
@@ -50,10 +50,10 @@ polyad_data(const struct polyad *p)
     return p->data;
 }
 
-static inline const unsigned char *
-_item_base(const struct polyad *p, size_t i)
+static inline const void *
+_item_buf(const struct polyad *p, size_t i)
 {
-    return ((const unsigned char *) p->data) + p->item_off[i];
+    return ((const char *) p->data) + p->item_off[i];
 }
 
 static inline size_t
@@ -66,7 +66,7 @@ size_t
 polyad_item(const struct polyad *p, size_t i, const void **item)
 {
     if (i < p->rank) {
-        *item = _item_base(p, i);
+        *item = _item_buf(p, i);
         return _item_len(p, i);
     } else {
         *item = NULL;
@@ -91,7 +91,7 @@ polyad_load(const void *data, size_t size, const struct polyad **dst)
         if (p) {
             /* read the item sizes */
             p->rank = rank;
-            p->data = data;
+            p->data = (void *) data;
             off = n;
             for (i = 0; i < rank; i++) {
                 n = vi_to_size(data + off, size - off, &p->item_off[i]);

@@ -29,6 +29,9 @@
  */
 struct polyad;
 
+/**
+ * polyads are const/immutable
+ */
 typedef const struct polyad * polyad_t;
 
 /** The number of items in a polyad. **/
