@@ -47,6 +47,8 @@ capi = Extension(
      'src/polyadobject.c',
      'src/ntuple.c',
      'src/varint.c',
+     'src/varyad.c',
+     'src/varyadobject.c',
      ],
 )
 

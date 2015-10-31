@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import platform
+import struct
 import sys
 
 pd = None
@@ -36,6 +37,7 @@ def main(buildroot='build'):
 
     test_zig()
     test_zag()
+    test_varyad()
 
 def dopath(buildroot):
     path = '%(buildroot)s/lib.%(lsystem)s-%(machine)s-%(version)s' % dict(
@@ -214,6 +216,26 @@ def test_zag():
         assert(tuple(zagrange(l, h)) == pd.zag(range(l, h)))
     test(0, 100)
     test((1 << 64) -10, (1 << 64))
+
+def test_varyad():
+    v = pd.varyad()
+    assert(0 == len(v))
+    b = bytes(v)
+    assert(16 == len(b))
+    assert((0, 16) == struct.unpack("PP", b))
+    v.push(b'')
+    assert(1 == len(v))
+    assert(0 == len(v[0]))
+    b = bytes(v)
+    assert(32 == len(b))
+    assert((1, 32) == struct.unpack("PP", b[:16]))
+    v.push(b'hello')
+    assert(2 == len(v))
+    assert(5 == len(v[1]))
+    assert(b'hello' == bytes(v[1]))
+    b = bytes(v)
+    assert(64 == len(b))
+    assert((2, 64) == struct.unpack("PP", b[:16]))
 
 if __name__ == '__main__':
     main(*sys.argv[1:])

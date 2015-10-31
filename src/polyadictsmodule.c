@@ -20,6 +20,7 @@
 #include "polyadictsmodule.h"
 #include "polyadobject.h"
 #include "ntuple.h"
+#include "varyadobject.h"
 
 static PyObject*
 _ntuple_frombuffer(PyObject *src)
@@ -283,6 +284,8 @@ PyMODINIT_FUNC PyInit_polyadicts (void)
     // Initialize the type objects
     if (PyType_Ready(&PyPolyad_Type) < 0)
         return NULL;
+    if (PyType_Ready(&PyVaryad_Type) < 0)
+        return NULL;
 
     // Initialize module
     PyObject *module = PyModule_Create(&polyadicts_module);
@@ -290,6 +293,8 @@ PyMODINIT_FUNC PyInit_polyadicts (void)
         // Add type object references to the module
         Py_INCREF(&PyPolyad_Type);
         PyModule_AddObject(module, "polyad", (PyObject*)&PyPolyad_Type);
+        Py_INCREF(&PyVaryad_Type);
+        PyModule_AddObject(module, "varyad", (PyObject*)&PyVaryad_Type);
     }
     return module;
 }
