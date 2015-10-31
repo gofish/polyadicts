@@ -145,11 +145,12 @@ polyad_init(size_t rank, const void **items, const size_t *sizes, const struct p
                     off += sizes[i];
                 }
                 p->item_off[rank] = off;
-                off += SIZEOF_POLYAD(rank);
                 *dst = p;
             } else {
                 free(p);
             }
+        } else {
+            off = 0;
         }
     }
     return off;

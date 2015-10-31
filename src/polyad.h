@@ -63,9 +63,10 @@ size_t polyad_item(polyad_t p, size_t i, const void **dst);
  * @param src a pointer to the read buffer
  * @param len the buffer size (maximum length of polyad)
  * @param dst the address of an uninitialized polyad pointer
- * @return the number of bytes read
+ * @return the number of bytes read, 0 on error
  * @error ERANGE a stored varint would overflow the {@code size_t} of this architecture
  * @error EINVAL the buffer {@code size} is too small to read a full polyad
+ * @error ENOMEM memory allocation failure
  **/
 size_t polyad_load(const void *src, size_t len, polyad_t *dst);
 
@@ -79,7 +80,9 @@ size_t polyad_load(const void *src, size_t len, polyad_t *dst);
  * @param items an array of {@code rank} item buffers
  * @param sizes the size of each corresponding buffer in {@code items}
  * @param dst the address of an uninitialized polyad pointer
- * @return the size of the polyad data buffer
+ * @return the size of the polyad data buffer, 0 on error
+ * @error ERANGE a {@code size_t} value would overflow when stored as a varint
+ * @error ENOMEM memory allocation failure
  */
 size_t polyad_init(size_t rank, const void **items, const size_t *sizes, polyad_t *dst);
 
