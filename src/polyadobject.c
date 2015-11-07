@@ -17,7 +17,7 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
-#include "polyadicobjects.h"
+#include "polyadobject.h"
 
 /**
  * PyPolyad

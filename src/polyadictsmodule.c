@@ -18,7 +18,7 @@
 */
 
 #include "polyadictsmodule.h"
-#include "polyadicobjects.h"
+#include "polyadobject.h"
 #include "ntuple.h"
 
 static PyObject*
