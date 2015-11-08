@@ -75,7 +75,14 @@ void   varyad_free(varyad_t v);
 
 /**
  * Push a data element onto the end of a varyad.
+ *
+ * @param v reference to a varyad pointer (which may be reallocated)
+ * @param data the data buffer to push onto the varyad
+ * @param size the size of the data buffer
+ * @param realloc flag enabling reallocation (1 if should reallocate)
+ * @return the size of the varyad (always > 0), or 0 on error
+ * @error ENOMEM if a rellocation is required and either failed or is disabled
  */
-int varyad_push(varyad_t *v, void *data, size_t size);
+size_t varyad_push(varyad_t *v, void *data, size_t size, int realloc);
 
 #endif

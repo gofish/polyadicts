@@ -38,6 +38,7 @@ def main(buildroot='build'):
     test_zig()
     test_zag()
     test_varyad()
+    test_varyad_default()
 
 def dopath(buildroot):
     path = '%(buildroot)s/lib.%(lsystem)s-%(machine)s-%(version)s' % dict(
@@ -218,11 +219,11 @@ def test_zag():
     test((1 << 64) -10, (1 << 64))
 
 def test_varyad():
-    v = pd.varyad()
+    v = pd.varyad(0)
     assert(0 == len(v))
     b = bytes(v)
     assert(16 == len(b))
-    assert((0, 16) == struct.unpack("PP", b))
+    assert((0, 16) == struct.unpack("PP", b[:16]))
     v.push(b'')
     assert(1 == len(v))
     assert(0 == len(v[0]))
@@ -236,6 +237,14 @@ def test_varyad():
     b = bytes(v)
     assert(64 == len(b))
     assert((2, 64) == struct.unpack("PP", b[:16]))
+
+def test_varyad_default():
+    v = pd.varyad()
+    assert(0 == len(v))
+    b = bytes(v)
+    assert(512 == len(b))
+    assert((0, 512) == struct.unpack("PP", b[:16]))
+    assert(b[:16] + (496 * b'\x00') == b)
 
 if __name__ == '__main__':
     main(*sys.argv[1:])

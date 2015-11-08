@@ -33,11 +33,10 @@ typedef struct PyVaryad_st
 } PyVaryad;
 
 PyAPI_FUNC(void) PyVaryad_dealloc(PyVaryad* self);
-PyAPI_FUNC(PyObject *) PyVaryad_tp_new(PyTypeObject *type, PyObject *args,
-        PyObject *kwds);
-//PyAPI_FUNC(PyObject *) PyVaryad_FromBuffer(Py_buffer *view, size_t off,
-//        size_t len);
-//PyAPI_FUNC(PyObject *) PyVaryad_FromSequence(PyObject *seq, const char *errmsg);
+PyAPI_FUNC(PyObject *) PyVaryad_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwds);
+PyAPI_FUNC(PyObject *) PyVaryad_FromBuffer(Py_buffer *view, size_t off, size_t len);
+PyAPI_FUNC(PyObject *) PyVaryad_FromSequence(PyObject *seq);
+PyAPI_FUNC(PyObject *) PyVaryad_FromSize(size_t size);
 
 /* PyVaryad buffer API */
 PyAPI_FUNC(int) PyVaryad_getbuffer(PyVaryad *self, Py_buffer *view, int flags);

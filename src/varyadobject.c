@@ -36,20 +36,68 @@ PyVaryad_dealloc(PyVaryad* self)
 }
 
 PyObject *
-PyVaryad_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+PyVaryad_FromBuffer(Py_buffer *view, size_t off, size_t len)
+{
+    PyErr_SetString(PyExc_NotImplementedError, "varyad(buffer) not implemented");
+    return NULL;
+}
+
+PyObject *
+PyVaryad_FromSequence(PyObject *seq)
+{
+    PyErr_SetString(PyExc_NotImplementedError, "varyad(sequence) not implemented");
+    return NULL;
+}
+
+PyObject *
+PyVaryad_FromSize(size_t size)
 {
     /* allocate new polyad object */
-    PyVaryad *self;
-    self = (PyVaryad*) PyVaryad_Type.tp_alloc(&PyVaryad_Type, 0);
-    if (!self)
-        return NULL;
-
-    if (!varyad_init(0, &self->varyad)) {
-        PyPolyad_SetErrFromErrno();
-        return NULL;
+    PyVaryad *self = (PyVaryad*) PyVaryad_Type.tp_alloc(&PyVaryad_Type, 0);
+    if (self) {
+        if (!varyad_init(size, &self->varyad)) {
+            PyPolyad_SetErrFromErrno();
+            Py_DECREF(self);
+            self = NULL;
+        }
     }
-
     return (PyObject *) self;
+
+}
+
+PyObject *
+PyVaryad_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    PyObject *arg = NULL;
+    if (!PyArg_ParseTuple(args, "|O", &arg)) {
+        return NULL;
+
+    } else if (arg == NULL) {
+        return PyVaryad_FromSize(512);
+
+    } else {
+        const unsigned PY_LONG_LONG size = PyLong_AsUnsignedLongLong(arg);
+        if (!PyErr_Occurred()) {
+            return PyVaryad_FromSize(size);
+
+        } else {
+            Py_buffer view;
+            if (PyObject_CheckBuffer(arg) &&
+                    0 == PyObject_GetBuffer(arg, &view, PyBUF_SIMPLE)) {
+                PyObject *const v = PyVaryad_FromBuffer(&view, 0, 0);
+                PyBuffer_Release(&view);
+                return v;
+
+            } else if (PySequence_Check(arg)) {
+                return PyVaryad_FromSequence(arg);
+
+            } else {
+                PyErr_SetString(PyExc_TypeError,
+                        "expected a positive integer, a bufferable, or a sequence");
+                return NULL;
+            }
+        }
+    }
 }
 
 /* PyVaryad buffer API */
@@ -107,7 +155,7 @@ PyVaryad_push(PyVaryad *self, PyObject *obj)
     Py_buffer view;
     if (PyObject_CheckBuffer(obj)) {
         if (0 == PyObject_GetBuffer(obj, &view, PyBUF_SIMPLE)) {
-            if (0 == varyad_push(&self->varyad, view.buf, view.len)) {
+            if (varyad_push(&self->varyad, view.buf, view.len, 1)) {
                 Py_INCREF(Py_None);
                 return Py_None;
             } else {

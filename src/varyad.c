@@ -168,18 +168,24 @@ _realloc(struct varyad *v)
     return v;
 }
 
-int
-varyad_push(struct varyad **v, void *data, size_t size)
+size_t
+varyad_push(struct varyad **v, void *data, size_t size, int realloc)
 {
     if (_avail(*v) < size + sizeof(size_t)) {
-        struct varyad *const tmp = _realloc(*v);
-        if (!tmp) {
-            return -1;
+        if (!realloc) {
+            errno = ENOMEM;
+            return 0;
+        } else {
+            struct varyad *const tmp = _realloc(*v);
+            if (!tmp) {
+                return 0;
+            } else {
+                *v = tmp;
+            }
         }
-        *v = tmp;
     }
     const size_t off = _size(*v, (*v)->rank);
     memcpy(_head(*v) + off, data, size);
     _set_size(*v, (*v)->rank++, off + size);
-    return 0;
+    return (*v)->size;
 }
