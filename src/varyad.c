@@ -184,7 +184,7 @@ varyad_push(struct varyad **v, void *data, size_t size, int realloc)
             }
         }
     }
-    const size_t off = _size(*v, (*v)->rank);
+    const size_t off = (*v)->rank ? _size(*v, (*v)->rank-1) : 0;
     memcpy(_head(*v) + off, data, size);
     _set_size(*v, (*v)->rank++, off + size);
     return (*v)->size;

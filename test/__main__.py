@@ -39,6 +39,7 @@ def main(buildroot='build'):
     test_zag()
     test_varyad()
     test_varyad_default()
+    test_varyad_to_polyad()
 
 def dopath(buildroot):
     path = '%(buildroot)s/lib.%(lsystem)s-%(machine)s-%(version)s' % dict(
@@ -245,6 +246,16 @@ def test_varyad_default():
     assert(512 == len(b))
     assert((0, 512) == struct.unpack("PP", b[:16]))
     assert(b[:16] + (496 * b'\x00') == b)
+
+def test_varyad_to_polyad():
+    v = pd.varyad(16)
+    v.push(b'hello')
+    v.push(b'world')
+    p = pd.polyad(tuple(v))
+    assert(2 == len(p))
+    assert(b'hello' == bytes(p[0]))
+    assert(b'world' == bytes(p[1]))
+    assert(b'\x02\x05\x05helloworld' == bytes(p))
 
 if __name__ == '__main__':
     main(*sys.argv[1:])
