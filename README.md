@@ -9,10 +9,6 @@ encapsulation of binary data as packed *n*-tuples. The format makes use of
 
 Uses Python3 and setuptools.
 
-    $ make
-
-The above will execute the following.
-
     $ python3 setup.py build
 
 This should produce the `polyadicts` Python module under `build/`.
@@ -22,11 +18,12 @@ e.g.
 
 ## Notes
 
-Some (limited) tests are implemented for basic wire format checks.
-
 This project is not considered safe to pack or unpack untrusted data.
 A thorough review is planned for the latest API implementation, after
 which this warning will be removed, but no warranty will be provided.
+
+Some (limited) tests are implemented for basic wire format checks. See
+the Makefile for convenience in running tests and cleaning the build.
 
 ## Format
 
